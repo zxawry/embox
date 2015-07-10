@@ -43,8 +43,7 @@ $(OBJ_DIR)/%.o : $(ROOT_DIR)/%.C
 	$(CXX) $(flags_before) $(CXXFLAGS) $(CPPFLAGS) $(flags) -c -o $@ $<
 
 $(OBJ_DIR)/%.lds : $(ROOT_DIR)/%.lds.S
-	$(CPP) $(flags_before) -P -undef -D__LDS__ $(CPPFLAGS) $(flags) \
-	-imacros $(SRCGEN_DIR)/config.lds.h \
+	$(CPP) $(flags_before) -P -D__LDS__ $(CPPFLAGS) $(flags) \
 		-MMD -MT $@ -MF $@.d -o $@ $<
 
 ifeq ($(value OSTYPE),cygwin)

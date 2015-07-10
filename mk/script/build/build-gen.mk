@@ -614,8 +614,6 @@ $(@source_rmk) : flags = $(call trim, \
 			$(call do_flags,-I,$(includes)) \
 			$(call annotation_value,$(call build_deps_all,$(call get,$(module),allTypes)),$(my_bld_artpath_cppflags)) \
 			$(call do_flags,-D,$(defines)) \
-			-include $(patsubst %,$(value module_config_h_pat), \
-						$(mod_path)) \
 			-D__EMBUILD_MOD__=$(call module_id,$(module)) \
 			$(call check_profiling,$(instrument)) \
 			$(call do_flags,,$(additional_cflags)))
