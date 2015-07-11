@@ -10,6 +10,7 @@
 #define ARCH_NOCONTEXT_H_
 
 struct context {
+	void *nothing;
 };
 
 #endif /* ARCH_NOCONTEXT_H_ */
