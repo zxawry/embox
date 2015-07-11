@@ -16,5 +16,5 @@ void context_init(struct context *ctx, unsigned int flags,
 }
 
 void context_switch(struct context *prev, struct context *next) {
-	panic("%s", __func__);
+	panic("%s", "context_switch");
 }
