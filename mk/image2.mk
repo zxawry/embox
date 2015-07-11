@@ -106,9 +106,13 @@ ld_prerequisites = $(module_prereqs)
 obj_build=$(if $(strip $(value mod_postbuild)),$@.build.o,$@)
 obj_postbuild=$@
 $(OBJ_DIR)/module/%.o :
-	$(LD) -r -o $(obj_build) $(ldflags) $(call fmt_line,$(o_files) \
-            $(if $(a_files),--whole-archive $(a_files) --no-whole-archive))
-	$(if $(module_id),$(OBJCOPY) $(objcopy_flags) $(obj_build))
+	if [ $$(echo $(o_files) $(a_files) | wc -w) -gt 1 ]; then \
+		$(LD) -r -o $(obj_build) $(ldflags) $(call fmt_line,$(o_files) \
+		    $(if $(a_files),--whole-archive $(a_files) --no-whole-archive)); \
+	else \
+		cp $(o_files) $(a_files) $(obj_build); \
+	fi
+	#$(if $(module_id),$(OBJCOPY) $(objcopy_flags) $(obj_build))
 	$(mod_postbuild)
 
 
