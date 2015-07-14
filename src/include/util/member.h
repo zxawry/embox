@@ -116,7 +116,7 @@
 	})
 
 
-#ifndef NDEBUG
+#if 0
 # define __member_check_notnull(expr) \
 	({                                             \
 		typeof(expr) __member_expr__ = (expr); \
