@@ -16,11 +16,11 @@
 #include <termios.h>
 #include <framework/mod/options.h>
 
-#if OPTION_DEFINED(STRING,impl)
+//#if OPTION_DEFINED(STRING,impl)
 #define DIAG_IMPL DIAG_IMPL_NAME(OPTION_GET(STRING,impl))
-#else
-#error No impl option provided
-#endif
+//#else
+//#error No impl option provided
+//#endif
 
 extern const struct diag DIAG_IMPL;
 static const struct diag *cdiag = &DIAG_IMPL;
