@@ -14,12 +14,18 @@
 #include <module/embox/arch/smp.h>
 
 /* FIXME hack to get abstract module variable */
+#ifndef NOSMP
+
 #if OPTION_MODULE_DEFINED(embox__arch__cpu, NUMBER, cpu_count)
 # define NCPU OPTION_MODULE_GET(embox__arch__cpu, NUMBER, cpu_count)
 #elif OPTION_MODULE_DEFINED(embox__arch__generic__onecpu, NUMBER, cpu_count)
 # define NCPU OPTION_MODULE_GET(embox__arch__generic__onecpu, NUMBER, cpu_count)
 #elif OPTION_MODULE_DEFINED(embox__arch__x86__kernel__cpu, NUMBER, cpu_count)
 # define NCPU OPTION_MODULE_GET(embox__arch__x86__kernel__cpu, NUMBER, cpu_count)
+#endif
+
+#else
+#define NCPU 1
 #endif
 
 #ifndef NOSMP
