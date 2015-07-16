@@ -14,6 +14,6 @@ module Kernel {
 	depends embox.arch.cpu
 	depends embox.kernel.stack
 
-	depends embox.framework.runlevel
+	//depends embox.framework.runlevel
 	depends embox.compat.libc.assert
 }

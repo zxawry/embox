@@ -49,12 +49,12 @@ static void kernel_init(void) {
  * @return 0
  */
 static int init(void) {
-	int ret;
+	int ret = 0;
 	const runlevel_nr_t target_level = RUNLEVEL_NRS_TOTAL - 1;
 
 	printk("\nEmbox kernel start\n");
 
-	ret = runlevel_set(target_level);
+	//ret = runlevel_set(target_level);
 
 	return ret;
 }
