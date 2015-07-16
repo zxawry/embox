@@ -12,6 +12,7 @@
 #ifndef __ASSEMBLER__
 
 #include <sys/cdefs.h>
+#include <compiler.h>
 
 __BEGIN_DECLS
 

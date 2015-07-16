@@ -11,7 +11,7 @@
 #define PAGE_SIZE() OPTION_MODULE_GET(embox__mem__NoPage,NUMBER,page_size)
 
 #ifndef __LDS__
-
+#include <compiler.h>
 static inline struct page_allocator *page_allocator_init(char *start, size_t len, size_t page_size) {
 	return NULL;
 }

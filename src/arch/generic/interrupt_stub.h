@@ -13,6 +13,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include <compiler.h>
+
 typedef unsigned int __ipl_t;
 
 static inline void ipl_init(void) { }

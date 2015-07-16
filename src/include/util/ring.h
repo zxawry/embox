@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include <compiler.h>
 //#include <util/math.h>
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
