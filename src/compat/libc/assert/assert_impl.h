@@ -26,7 +26,7 @@
  *      unused.
  */
 # define __assert(condition, expr_str, ...) \
-	do { } while ((typeof(condition)) 0)
+	do { } while (0)
 
 #else
 
