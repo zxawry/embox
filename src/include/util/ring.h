@@ -12,7 +12,9 @@
 #include <assert.h>
 #include <stddef.h>
 
-#include <util/math.h>
+//#include <util/math.h>
+
+#define min(a,b) ((a) < (b) ? (a) : (b))
 
 /**
  * Control block for managing ring buffers.
