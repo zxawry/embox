@@ -18,6 +18,7 @@
 
 //#if OPTION_DEFINED(STRING,impl)
 #define DIAG_IMPL DIAG_IMPL_NAME(OPTION_GET(STRING,impl))
+#include <module/embox/driver/diag.h>
 //#else
 //#error No impl option provided
 //#endif

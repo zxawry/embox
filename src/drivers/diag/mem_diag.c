@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include <framework/mod/options.h>
+#include <module/embox/driver/diag/mem_diag.h>
 
 #define BUF_LEN OPTION_GET(NUMBER,buffer_len)
 
