@@ -123,15 +123,14 @@ $(shell $(MKDIR) $(OBJ_DIR) 2> /dev/null)
 GPATH := $(OBJ_DIR:$(ROOT_DIR)/%=%)
 VPATH += $(GPATH)
 
-$(embox_o): ldflags_all = $(LDFLAGS) \
-		$(call fmt_line,$(call ld_scripts_flag,$(ld_scripts)))
-$(embox_o):
-	$(LD) -r $(ldflags_all) \
+link_lib = -L$(dir $1) -l$(patsubst lib%,%,$(basename $(notdir $1)))
+LARGE_LIB = $(dir $(embox_o))/lib$(basename $(notdir $(embox_o))).large.a
+
+$(embox_o): ldflags_all = $(call fmt_line,$(call ld_scripts_flag,$(ld_scripts)))
+$(embox_o): $(LARGE_LIB)
+	$(LD) $(ldflags_all) \
 		$(call fmt_line,$(ld_objs)) \
-		--start-group \
-		$(call fmt_line,$(ld_libs)) \
-		--end-group \
-	--cref -Map $@.map \
+		$(call link_lib,$(LARGE_LIB)) \
 	-o $@
 
 stages := $(wordlist 1,$(STAGE),1 2)
@@ -142,7 +141,16 @@ $(embox_o) : $$(image_prereqs)
 $(embox_o) : mk_file = $(__image_mk_file)
 $(embox_o) : ld_scripts = $(__image_ld_scripts1) # TODO check this twice
 $(embox_o) : ld_objs = $(foreach s,$(stages),$(__image_ld_objs$s))
-$(embox_o) : ld_libs = $(foreach s,$(stages),$(__image_ld_libs$s))
+ld_libs = $(foreach s,$(stages),$(__image_ld_libs$s))
+
+$(LARGE_LIB) : $(ld_libs)
+	$(foreach i,$(ld_libs),echo ***$i;ar t $i;)
+	@$(MAKE) -f mk/arhelper.mk TARGET='$@' \
+		AR='$(AR)' ARFLAGS='$(ARFLAGS)' \
+		A_FILES='$(ld_libs)' \
+		O_FILES='' \
+		APP_ID=''
+
 
 $(image_lds) : $$(common_prereqs)
 $(image_lds) : flags_before :=
