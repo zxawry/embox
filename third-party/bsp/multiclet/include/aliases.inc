@@ -3,12 +3,12 @@
 
 
 .ifdef .LMCp0411100101
- .alias SP		3
- .alias BP		3
- .alias SI		3
- .alias DI		3
- .alias CX		3
- .alias sizeof.DM	0x20000	
+ .alias SP		39
+ .alias BP		38
+ .alias SI		37
+ .alias DI		36
+ .alias CX		35
+ .alias sizeof.DM	0x20000
 .else
  .ifdef .LMCp042R100102
   .alias SP		15
