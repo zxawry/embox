@@ -170,9 +170,9 @@ override COMMON_FLAGS += --debug-prefix-map=./=
 endif
 
 # Assembler flags
-asflags := $(CFLAGS)
-override ASFLAGS = $(COMMON_FLAGS)
-override ASFLAGS += $(asflags)
+#asflags := $(CFLAGS)
+#override ASFLAGS = $(COMMON_FLAGS)
+#override ASFLAGS += $(asflags)
 
 override COMMON_CCFLAGS := $(COMMON_FLAGS)
 override COMMON_CCFLAGS += -fno-strict-aliasing -fno-common

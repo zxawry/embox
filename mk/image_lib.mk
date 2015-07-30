@@ -33,7 +33,7 @@ $(OBJ_DIR)/%.o : $(ROOT_DIR)/%.c
 	$(CC) $(flags_before) $(CFLAGS) $(CPPFLAGS) $(flags) -c -o $@ $<
 
 $(OBJ_DIR)/%.o : $(ROOT_DIR)/%.S
-	$(CC) $(flags_before) $(ASFLAGS) $(CPPFLAGS) $(flags) -c -o $@ $<
+	$(AS) $(ASFLAGS) -o $@ $<
 
 $(OBJ_DIR)/%.o : $(ROOT_DIR)/%.cpp
 	$(CXX) $(flags_before) $(CXXFLAGS) $(CPPFLAGS) $(flags) -c -o $@ $<
