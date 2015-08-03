@@ -12,7 +12,7 @@ module Kernel {
 	depends embox.arch.libarch
 	depends embox.arch.locore
 	depends embox.arch.cpu
-	depends embox.kernel.stack
+	//depends embox.kernel.stack
 
 	//depends embox.framework.runlevel
 	depends embox.compat.libc.assert

@@ -128,10 +128,10 @@ LARGE_LIB = $(dir $(embox_o))/lib$(basename $(notdir $(embox_o))).large.a
 
 $(embox_o): ldflags_all = $(call fmt_line,$(call ld_scripts_flag,$(ld_scripts)))
 $(embox_o): $(LARGE_LIB)
-	$(LD) $(ldflags_all) \
+	$(LD) $(ldflags_all) -T $(SRC_DIR)/arch/multiclet/multiclet.lds \
 		$(call fmt_line,$(ld_objs)) \
 		$(call link_lib,$(LARGE_LIB)) \
-	-o $@
+	-o $@ -M
 
 stages := $(wordlist 1,$(STAGE),1 2)
 
