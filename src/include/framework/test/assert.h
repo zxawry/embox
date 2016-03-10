@@ -268,7 +268,14 @@ extern int assert_happened(void);
 #define ASSERT_EXPECTED_BEGIN()		\
 	assert_expected_set()
 	
-#define ASSERT_EXPECTED_END()		\
+#define ASSERT_EXPECTED_END()							\
+	if (!assert_happened()) {						\
+		__test_assertion_handle(0, 					\
+					__test_assertion_point_ref(		\
+						"Missed expected assert()"	\
+					)					\
+		); 								\
+	}									\
 	assert_expected_clear()
 
 #endif /* FRAMEWORK_TEST_ASSERT_H_ */

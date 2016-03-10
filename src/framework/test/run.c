@@ -161,6 +161,8 @@ static const struct __test_assertion_point *test_run(test_case_run_t run) {
 			assert_expected_clear();
 			assert_happened_clear();
 			return 0;
+		} else {
+			/* Should not be entered actually */
 		}
 	}
 
@@ -182,7 +184,6 @@ void __test_assertion_handle(int pass,
 
 	if (current) {
 		longjmp(current->before_run, (int) point);
-
 	} else {
 		handle_case_result(NULL, point);
 		panic("\n\ttest_assert failed inside fixture\n");
