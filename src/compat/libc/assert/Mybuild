@@ -3,6 +3,9 @@ package embox.compat.libc
 static module assert {
 	option boolean banner_print = true
 
+	/* Used in test framework */
+	option boolean expected_assert_support = true
+
 	source "assert.c"
 	source "assert_impl.h"
 

@@ -17,6 +17,10 @@
 
 #define BANNER_PRINT OPTION_GET(BOOLEAN, banner_print)
 
+#if EXPECTED_ASSERT_SUPPORT
+#include <embox/test.h>
+#endif
+
 #ifndef NDEBUG
 /*# error "Compiling assert.c for NDEBUG configuration"*/
 

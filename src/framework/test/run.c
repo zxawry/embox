@@ -25,13 +25,30 @@
 #include <framework/test/emit.h>
 
 static int assert_expected_flag = 0;
+static int assert_happened_flag = 0;
 
-void assert_expected_flag_up(void) {
+void assert_expected_set(void) {
 	assert_expected_flag = 1;
 }
 
-void assert_expected_flag_down(void) {
+void assert_expected_clear(void) {
 	assert_expected_flag = 0;
+}
+
+int assert_expected(void) {
+	return assert_expected_flag;
+}
+
+void assert_happened_clear() {
+	assert_happened_flag = 0;
+}
+
+void assert_happened_set() {
+	assert_happened_flag = 1;
+}
+
+int assert_happened() {
+	return assert_happened_flag;
 }
 
 /**
@@ -129,13 +146,23 @@ static int test_case_run(const struct test_case *test_case,
 static const struct __test_assertion_point *test_run(test_case_run_t run) {
 	struct test_run_context ctx;
 	int caught;
-
+	int started = 0;
+	
 	current = &ctx;
 	test_emit_buffer_init(&current->emitting, emit_buffer, EMIT_BUFFER_SZ);
-	if (!(caught = setjmp(ctx.before_run))) {
+	if (!started && !(caught = setjmp(ctx.before_run))) {
+		started = 1;
 		run();
 	}
 	current = NULL;
+
+	if (assert_expected()) {
+		if (assert_happened()) {
+			assert_expected_clear();
+			assert_happened_clear();
+			return 0;
+		}
+	}
 
 	return (const struct __test_assertion_point *) caught;
 }

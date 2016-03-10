@@ -257,10 +257,18 @@ failed: test_assert_not_equal(<#actual>, <#expected>): <actual>
 
 #endif /* __CDT_PARSER__ */
 
-extern void assert_expected_flag_up(void);
-extern void assert_expected_flag_down(void);
+extern void assert_expected_set(void);
+extern void assert_expected_clear(void);
+extern int assert_expected(void);
 
-#define ASSERT_EXPECTED_BEGIN() assert_expected_flag_up()
-#define ASSERT_EXPECTED_END() assert_expected_flag_down()
+extern void assert_happened_clear();
+extern void assert_happened_set();
+extern int assert_happened(void);
+
+#define ASSERT_EXPECTED_BEGIN()		\
+	assert_expected_set()
+	
+#define ASSERT_EXPECTED_END()		\
+	assert_expected_clear()
 
 #endif /* FRAMEWORK_TEST_ASSERT_H_ */
