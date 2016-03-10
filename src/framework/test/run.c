@@ -24,6 +24,16 @@
 #include <framework/test/assert.h>
 #include <framework/test/emit.h>
 
+static int assert_expected_flag = 0;
+
+void assert_expected_flag_up(void) {
+	assert_expected_flag = 1;
+}
+
+void assert_expected_flag_down(void) {
+	assert_expected_flag = 0;
+}
+
 /**
  * Runtime context for a test case.
  */

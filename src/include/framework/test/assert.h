@@ -257,4 +257,10 @@ failed: test_assert_not_equal(<#actual>, <#expected>): <actual>
 
 #endif /* __CDT_PARSER__ */
 
+extern void assert_expected_flag_up(void);
+extern void assert_expected_flag_down(void);
+
+#define ASSERT_EXPECTED_BEGIN() assert_expected_flag_up()
+#define ASSERT_EXPECTED_END() assert_expected_flag_down()
+
 #endif /* FRAMEWORK_TEST_ASSERT_H_ */
