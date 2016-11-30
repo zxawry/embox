@@ -50,6 +50,8 @@
 #endif
 
 #ifdef PLATFORM_EMBOX
+#include <stdio.h> // Because of warning: incompatible implicit declaration of built-in function ‘sprintf’
+
 #define  iwe_stream_add_event(a, b, c, d, e)  EMBOX_NIY(0, 0)
 #define  iwe_stream_add_point(a, b, c, d, e)  EMBOX_NIY(0, 0)
 #endif
