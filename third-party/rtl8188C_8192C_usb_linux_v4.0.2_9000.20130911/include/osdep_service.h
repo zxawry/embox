@@ -1045,6 +1045,7 @@ typedef unsigned gfp_t;
 #define GFP_HIGHUSER    (__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL | \
                          __GFP_HIGHMEM)
 #define EPROTO          71      /* Protocol error */
+#define ETIME         	62      /* Timer expired */
 
 #ifdef CONFIG_USB_HCI
 	typedef struct urb *  PURB;
