@@ -1,0 +1,11 @@
+package embox.driver.video
+
+module imx_hdmi {
+	option number base_addr=0x120000
+	option number log_level=1
+
+	source "imx_hdmi.c"
+
+	@NoRuntime depends fb
+	@NoRuntime depends embox.compat.libc.all
+}
