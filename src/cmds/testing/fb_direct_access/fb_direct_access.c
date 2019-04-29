@@ -23,6 +23,7 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+void dcache_flush(const void *p, size_t size);
 static void fill_gradient(void *base, const struct fb_info *fb_info) {
 	int x, y, width, height;
 	int bytes_per_pixel;
@@ -31,13 +32,11 @@ static void fill_gradient(void *base, const struct fb_info *fb_info) {
 	/* Figure out the size of the screen in bytes */
 	bytes_per_pixel = fb_info->var.bits_per_pixel / 8;
 
-	width = fb_info->var.xres;
+	width = fb_info->var.xres - 1;
 	height = fb_info->var.yres;
 	idx = fb_info->var.xoffset + fb_info->var.xres * fb_info->var.yoffset;
 
 	for (y = 0; y < height; y++) {
-		idx += fb_info->var.xres;
-
 		for (x = 0; x < width; x++) {
 			if (bytes_per_pixel == 4) {
 				((uint32_t *)base)[idx + x] = (0 << 24) |                    /* No transparency */
@@ -53,11 +52,22 @@ static void fill_gradient(void *base, const struct fb_info *fb_info) {
 				((uint16_t *)base)[idx + x] = t;
 			}
 		}
+
+		idx += fb_info->var.xres;
 	}
+
+	dcache_flush(base, width * height * bytes_per_pixel);
 }
 
 static int simple_test(struct fb_info *fb_info) {
+	int scr_sz = fb_info->var.xres * fb_info->var.yres * fb_info->var.bits_per_pixel / 8;
+	vmem_set_flags(vmem_current_context(),
+			(mmu_vaddr_t) fb_info->screen_base,
+			scr_sz,
+			VMEM_PAGE_WRITABLE);
 	fill_gradient(fb_info->screen_base, fb_info);
+	fps_set_format("Embox FB simple test");
+	fps_print(fb_info);
 	return 0;
 }
 
@@ -106,12 +116,13 @@ static void print_help(void) {
 	printf("Options: [-t] for tearing test\n");
 }
 
-int main() {
+int main(int argc, char **argv) {
 	struct fb_info *fb_info;
 	int opt;
-	int (*test_fn)(struct fb_info *) test_fn = simple_test;
+	int (*test_fn)(struct fb_info *) = simple_test;
 
 	while (-1 != (opt = getopt(argc, argv, "th"))) {
+		switch (opt) {
 		case 'h':
 			print_help();
 			return 0;
@@ -122,6 +133,7 @@ int main() {
 			printf("Uknown option\n");
 			print_help();
 			return 0;
+		}
 	}
 
 	fb_info = fb_lookup(0);
@@ -129,6 +141,8 @@ int main() {
 	printf("%dx%d, %dbpp\n", fb_info->var.xres, fb_info->var.yres, fb_info->var.bits_per_pixel);
 
 	test_fn(fb_info);
+
+	printf("out\n");
 
 	return 0;
 }
