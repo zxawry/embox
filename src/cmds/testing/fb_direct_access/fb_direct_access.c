@@ -32,7 +32,7 @@ static void fill_gradient(void *base, const struct fb_info *fb_info) {
 	/* Figure out the size of the screen in bytes */
 	bytes_per_pixel = fb_info->var.bits_per_pixel / 8;
 
-	width = fb_info->var.xres - 1;
+	width = fb_info->var.xres;
 	height = fb_info->var.yres;
 	idx = fb_info->var.xoffset + fb_info->var.xres * fb_info->var.yoffset;
 
@@ -55,8 +55,6 @@ static void fill_gradient(void *base, const struct fb_info *fb_info) {
 
 		idx += fb_info->var.xres;
 	}
-
-	dcache_flush(base, width * height * bytes_per_pixel);
 }
 
 static int simple_test(struct fb_info *fb_info) {
@@ -80,10 +78,6 @@ static int swap_test(struct fb_info *fb_info) {
 
 	assert(base[0] && base[1]);
 
-	for (int i = 0; i < scr_sz; i++) {
-		base[1][i] ^= 0xff;
-	}
-
 	vmem_set_flags(vmem_current_context(),
 			(mmu_vaddr_t) base[0],
 			scr_sz,
@@ -96,6 +90,10 @@ static int swap_test(struct fb_info *fb_info) {
 
 	fill_gradient(base[0], fb_info);
 	fill_gradient(base[1], fb_info);
+
+	for (int i = 0; i < scr_sz; i++) {
+		base[1][i] ^= 0xff;
+	}
 
 	fps_set_format("Embox FB swap test\nFPS=%d");
 	fps_set_base_frame(fb_info, base[0]);
