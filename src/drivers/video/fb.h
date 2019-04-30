@@ -163,8 +163,11 @@ struct fb_ops {
 	void (*fb_fillrect)(struct fb_info *info, const struct fb_fillrect *rect);
 	void (*fb_imageblit)(struct fb_info *info, const struct fb_image *image);
 	void (*fb_cursor)(struct fb_info *info, const struct fb_cursor *cursor);
-	int (*fb_set_base)(struct fb_info *info, void *new_base);
+	int (*fb_set_base)(struct fb_info *info, void *new_base, int buf_num);
+	int (*fb_set_frame)(struct fb_info *info, int buf_num);
 };
+
+#define FB_MAX_BUFFERS 2
 
 struct fb_info {
 	int id; /**< ID, monothonically incremented for each fb */
@@ -174,6 +177,13 @@ struct fb_info {
 	size_t screen_size; /**< Maximum lenght of frame buffer */
 
 	struct fb_var_screeninfo var; /**< Current variable settins */
+
+	/* Following fields are related to double buffering */
+	int current_frame;
+	int max_frames;
+	void *frame_base[FB_MAX_BUFFERS];
+
+	void *priv; /* Device-specific data */
 };
 
 extern struct fb_info *fb_create(const struct fb_ops *ops, char *map_base,
@@ -193,6 +203,10 @@ extern void fb_fillrect(struct fb_info *info, const struct fb_fillrect *rect);
 extern void fb_imageblit(struct fb_info *info, const struct fb_image *image);
 extern void fb_cursor(struct fb_info *info, const struct fb_cursor *cursor);
 
+extern int fb_set_base(struct fb_info *info, void *new_base, int buf_num);
+extern void *fb_current_frame(struct fb_info *info);
+extern void *fb_next_frame(struct fb_info *info);
+extern int fb_swap_frame(struct fb_info *info);
 
 extern int fb_devfs_create(struct fb_info *fbi, char *map_base, size_t map_size);
 

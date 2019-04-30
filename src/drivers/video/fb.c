@@ -91,6 +91,11 @@ struct fb_info *fb_create(const struct fb_ops *ops, char *map_base, size_t map_s
 		info->screen_base = map_base;
 		info->screen_size = map_size;
 
+		/* By default provide no support for double buffering */
+		info->frame_base[0] = map_base;
+		info->current_frame = 0;
+		info->max_frames = 1;
+
 		memcpy(&info->ops, ops, sizeof(struct fb_ops));
 		fb_ops_fixup(&info->ops);
 		fb_update_current_var(info);
@@ -165,6 +170,67 @@ void fb_cursor(struct fb_info *info, const struct fb_cursor *cursor) {
 
 void fb_imageblit(struct fb_info *info, const struct fb_image *image) {
 	info->ops.fb_imageblit(info, image);
+}
+
+void *fb_current_frame(struct fb_info *info) {
+	void *res;
+
+	assert(info);
+
+	res = info->frame_base[info->current_frame];
+
+	assert(res);
+
+	return res;
+}
+
+void *fb_next_frame(struct fb_info *info) {
+	int tmp;
+	void *res;
+
+	assert(info);
+	assert(info->max_frames > 0);
+
+	tmp = (info->current_frame + 1) % info->max_frames;
+
+	res = info->frame_base[tmp];
+
+	assert(res);
+
+	return res;
+}
+
+int fb_swap_frame(struct fb_info *info) {
+	int err;
+
+	assert(info);
+
+	if (info->ops.fb_set_frame) {
+		assert(info->max_frames > 0);
+		info->current_frame++;
+		info->current_frame %= info->max_frames;
+
+		err = info->ops.fb_set_frame(info, info->current_frame);
+
+		info->screen_base = fb_current_frame(info);
+
+		return err;
+	} else {
+		return -ENOSYS;
+	}
+}
+
+int fb_set_base(struct fb_info *info, void *new_base, int buf_num) {
+	assert(info);
+	assert(new_base);
+	assert(buf_num < info->max_frames);
+
+	if (info->ops.fb_set_base) {
+		info->frame_base[buf_num] = new_base;
+		return info->ops.fb_set_base(info, new_base, buf_num);
+	} else {
+		return -ENOSYS;
+	}
 }
 
 #define _val_fixup(x, low, high) (min((high), max((low), (x))))
