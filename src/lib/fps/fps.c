@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <kernel/printk.h>
 #include <drivers/video/fb.h>
 #include <drivers/video/fb_overlay.h>
 #include <drivers/video/font.h>
@@ -44,13 +45,21 @@ void fps_set_format(const char *format) {
  */
 static uint8_t *fps_sw_base[2] = { 0, 0 };
 void fps_set_base_frame(struct fb_info *fb, void *base) {
+	assert(fb);
+
 	/* XXX works only with single FB */
 	fps_sw_base[0] = base;
+
+	fb_set_base(fb, base, 0);
 }
 
 void fps_set_back_frame(struct fb_info *fb, void *base) {
+	assert(fb);
+
 	/* XXX works only with single FB */
 	fps_sw_base[1] = base;
+
+	fb_set_base(fb, base, 1);
 }
 
 /**
@@ -87,7 +96,7 @@ void fps_print(struct fb_info *fb) {
 
 	snprintf(msg_buf, sizeof(msg_buf), fps_format_string, fps);
 
-	fb_overlay_init(fb, fps_sw_base[0] != 0 ? (void *) fps_current_frame(fb) : (void *) fb->screen_base);
+	fb_overlay_init(fb, fps_current_frame(fb));
 
 	msg = msg_buf;
 	line = 0;
@@ -104,6 +113,12 @@ void fps_print(struct fb_info *fb) {
 
 		line++;
 	}
+}
+
+static inline bool fb_supports_swap(struct fb_info *fb) {
+	assert(fb);
+
+	return fb->max_frames > 1;
 }
 
 /**
@@ -142,7 +157,6 @@ void *fps_enable_swap(struct fb_info *fb) {
 	return fps_sw_base[0];
 }
 
-
 static int fps_current = 0;
 /**
  * @brief Returns pointer of changable buffer, i.e. another buffer
@@ -150,6 +164,10 @@ static int fps_current = 0;
  */
 void *fps_current_frame(struct fb_info *fb) {
 	assert(fb);
+
+	if (fb_supports_swap(fb)) {
+		return fb_next_frame(fb);
+	}
 
 	if (fps_current % 2 == 0) {
 		assert(fps_sw_base[0]);
@@ -167,13 +185,14 @@ int fps_swap(struct fb_info *fb) {
 	assert(fb);
 	assert(fps_sw_base[0]);
 
-	if (fb->ops.fb_set_base != NULL) {
-		fb->ops.fb_set_base(fb, fps_current_frame(fb));
+	if (fb_supports_swap(fb)) {
+		fb_swap_frame(fb);
 		fps_current++;
 	} else {
 		memcpy(fb->screen_base,
 			fps_sw_base,
 			fb->var.xres * fb->var.yres * fb->var.bits_per_pixel / 8);
 	}
+
 	return 0;
 }
