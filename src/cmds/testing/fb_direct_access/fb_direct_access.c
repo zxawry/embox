@@ -99,7 +99,7 @@ static int swap_test(struct fb_info *fb_info) {
 	fps_set_base_frame(fb_info, base[0]);
 	fps_set_back_frame(fb_info, base[1]);
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 100000; i++) {
 		fps_print(fb_info);
 		fps_swap(fb_info);
 	}
@@ -139,8 +139,6 @@ int main(int argc, char **argv) {
 	printf("%dx%d, %dbpp\n", fb_info->var.xres, fb_info->var.yres, fb_info->var.bits_per_pixel);
 
 	test_fn(fb_info);
-
-	printf("out\n");
 
 	return 0;
 }
