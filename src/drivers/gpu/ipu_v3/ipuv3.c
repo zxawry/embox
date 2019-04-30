@@ -105,8 +105,8 @@ int ipu_probe(void) {
 	ipu_cm_write(ipu, 0xFFFFFFFF, IPU_CHA_CUR_BUF(0));
 	ipu_cm_write(ipu, 0xFFFFFFFF, IPU_CHA_CUR_BUF(32));
 
-	ipu_cm_write(ipu, 0x0, IPU_CHA_DB_MODE_SEL(0));
-	ipu_cm_write(ipu, 0x0, IPU_CHA_DB_MODE_SEL(32));
+	ipu_cm_write(ipu, 0xffffffff, IPU_CHA_DB_MODE_SEL(0));
+	ipu_cm_write(ipu, 0xffffffff, IPU_CHA_DB_MODE_SEL(32));
 
 	memset((void*) ipu->cpmem_base, 0, IPU_CPMEM_REG_LEN);
 
@@ -162,13 +162,14 @@ int32_t ipu_init_channel_buffer(struct ipu_soc *ipu, ipu_channel_t channel,
 				uint32_t pixel_fmt,
 				uint16_t width, uint16_t height,
 				uint32_t stride,
-				dma_addr_t phyaddr_0) {
+				dma_addr_t phyaddr_0,
+				dma_addr_t phyaddr_1) {
 	uint32_t dma_chan = IPU_CHAN_VIDEO_IN_DMA(channel);
 
 	assert(dma_chan == 23); /* XXX */
 
 	_ipu_ch_param_init(ipu, dma_chan, pixel_fmt, width, height, stride, 0, 0, 0,
-			   phyaddr_0);
+			   phyaddr_0, phyaddr_1);
 
 	return 0;
 }
@@ -228,6 +229,25 @@ int32_t ipu_disable_channel(struct ipu_soc *ipu, ipu_channel_t channel, bool wai
 	_ipu_clear_buffer_ready(ipu, channel, IPU_VIDEO_IN_BUFFER, 0);
 
 	return 0;
+}
+
+void ipu_dump_channel(struct ipu_soc *ipu, int chan) {
+	uint32_t tmp;
+
+	assert(ipu);
+
+	log_info("channel #%d info:", chan);
+
+	tmp = ipu_cm_read(ipu, IPU_CHA_CUR_BUF(chan));
+	tmp >>= chan % 32;
+	tmp &= 1;
+
+	log_info("\tcurrent buffer: %d", tmp);
+
+	tmp = ipu_cm_read(ipu, IPU_CHA_DB_MODE_SEL(chan));
+	tmp >>= chan % 32;
+	tmp &= 1;
+	log_info("\tdouble buffering enabled: %s", tmp ? "yes" : "no");
 }
 
 void ipu_disable_irq(struct ipu_soc *ipu, uint32_t irq) {

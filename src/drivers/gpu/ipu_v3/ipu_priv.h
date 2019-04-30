@@ -224,4 +224,7 @@ static inline void ipu_ic_write(struct ipu_soc *ipu,
 	REG32_STORE(ipu->ic_reg + offset, value);
 }
 
+
+void ipu_dump_channel(struct ipu_soc *ipu, int chan);
+
 #endif				/* __INCLUDE_IPU_PRV_H__ */

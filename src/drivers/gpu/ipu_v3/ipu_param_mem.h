@@ -254,7 +254,7 @@ static inline void _ipu_ch_param_init(struct ipu_soc *ipu, int ch,
 				      uint32_t pixel_fmt, uint32_t width,
 				      uint32_t height, uint32_t stride,
 				      uint32_t u, uint32_t v,
-				      uint32_t uv_stride, dma_addr_t addr0)
+				      uint32_t uv_stride, dma_addr_t addr0, dma_addr_t addr1)
 {
 	uint32_t u_offset = 0;
 	uint32_t v_offset = 0;
@@ -275,7 +275,7 @@ static inline void _ipu_ch_param_init(struct ipu_soc *ipu, int ch,
 
 	/* EBA is 8-byte aligned */
 	ipu_ch_param_set_field(&params, 1, 0, 29, addr0 >> 3);
-	ipu_ch_param_set_field(&params, 1, 29, 29, 0);
+	ipu_ch_param_set_field(&params, 1, 29, 29, addr1 >> 3);
 	if (addr0%8)
 		dev_warn(ipu->dev,
 			 "IDMAC%d's EBA0 is not 8-byte aligned\n", ch);

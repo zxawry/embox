@@ -1015,7 +1015,8 @@ extern int32_t ipu_init_channel_buffer(struct ipu_soc *ipu, ipu_channel_t channe
 				uint32_t pixel_fmt,
 				uint16_t width, uint16_t height,
 				uint32_t stride,
-				dma_addr_t phyaddr_0);
+				dma_addr_t phyaddr_0,
+				dma_addr_t phyaddr_1);
 
 int32_t ipu_init_sync_panel(struct ipu_soc *ipu, int disp,
 			    struct fb_info *fbi,
