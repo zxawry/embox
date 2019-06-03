@@ -11,6 +11,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <kernel/spinlock.h>
 
@@ -137,4 +138,23 @@ uint32_t __sync_fetch_and_add_4(void *mem, uint32_t val) {
 
 uint32_t __sync_fetch_and_sub_4(void *mem, uint32_t val) {
 	return __atomic_fetch_sub_4(mem, val, 0);
+}
+
+bool __atomic_compare_exchange_4(uint32_t *ptr, uint32_t *expected,
+	uint32_t desired, bool weak,
+	int success_memorder, int failure_memorder) {
+	(void) success_memorder;
+	(void) failure_memorder;
+	(void) weak;
+	bool ret;
+	spin_lock(&atomic_lock);
+	if (*ptr == *expected) {
+		*ptr = desired;
+		ret = true;
+	} else {
+		*expected = *ptr;
+		ret = false;
+	}
+	spin_unlock(&atomic_lock);
+	return ret;
 }
