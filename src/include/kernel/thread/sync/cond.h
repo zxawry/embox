@@ -42,7 +42,7 @@ typedef struct cond cond_t;
 				{/* dlist_init*/ (uintptr_t)NULL, NULL, NULL, NULL}, \
 				/* spinlock_t lock*/ \
 				{ /*l*/__SPIN_UNLOCKED, \
-					/* owner */ -1,   \
+					/* owner */ -1u,   \
 					/*contention_count */SPIN_CONTENTION_LIMIT\
 				} \
 			}, \
