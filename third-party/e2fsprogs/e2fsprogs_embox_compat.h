@@ -54,12 +54,12 @@ static inline int fchmod(int fd, mode_t mode) {
 }
 
 static inline ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
-	printf(">>> pread, fd - %d, offset - %d\n", fd, offset);
+	printf(">>> pread, fd - %d, offset - %lld\n", fd, offset);
 	return -1;
 }
 
 static inline ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
-	printf(">>> pwrite, fd - %d, offset - %d\n", fd, offset);
+	printf(">>> pwrite, fd - %d, offset - %lld\n", fd, offset);
 	return -1;
 }
 
