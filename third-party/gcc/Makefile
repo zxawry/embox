@@ -65,6 +65,13 @@ endif
 
 PKG_BUILD_DIR  := $(BUILD_DIR)/build
 
+EMBOX_DERIVED_CXXFLAGS = $(filter -g% -f% -m% -O% -G% -E% -Wa%,$(EMBOX_CXXFLAGS))
+ifeq (arm,$(EMBOX_ARCH))
+GCC_IMPORTED_CXXFLAGS = $(filter-out -fno-rtti,$(EMBOX_DERIVED_CXXFLAGS))
+else
+GCC_IMPORTED_CXXFLAGS = $(EMBOX_DERIVED_CXXFLAGS)
+endif
+
 $(CONFIGURE) :
 	mkdir -p $(PKG_BUILD_DIR) && cd $(PKG_BUILD_DIR) && ( \
 		. $(EMBOX_GCC_ENV) && $(PKG_SOURCE_DIR)/configure \
@@ -102,8 +109,13 @@ $(BUILD) :
 			GCC_FOR_TARGET=$${EMBOX_CROSS_COMPILE}gcc \
 			CXX_FOR_TARGET=$${EMBOX_CROSS_COMPILE}g++ \
 			RAW_CXX_FOR_TARGET=$${EMBOX_CROSS_COMPILE}g++ \
+<<<<<<< HEAD
 			AR_FOR_TARGET=$${EMBOX_CROSS_COMPILE}ar \
 			RANLIB_FOR_TARGET=$${EMBOX_CROSS_COMPILE}ranlib \
+=======
+			AR_FOR_TARGET=ar \
+			RANLIB_FOR_TARGET=ranlib \
+>>>>>>> 483b1127f... third_party: Compile gcc STL without exceptions also
 			TARGET-libiberty="LINKER=true CC=true AR=true RANLIB=touch all" \
 			TARGET-zlib="LINKER=true CC=true AR=true RANLIB=touch all" \
 			TARGET-libbacktrace="LINKER=true CC=true AR=touch \
@@ -123,6 +135,7 @@ $(BUILD) :
 	touch $@
 
 $(INSTALL) :
+<<<<<<< HEAD
 	cd $(PKG_BUILD_DIR) && ( \
 		. $(EMBOX_GCC_ENV) && \
 		$(MAKE) install-target-libgcc RANLIB_FOR_TARGET=$${EMBOX_CROSS_COMPILE}ranlib; \
@@ -138,4 +151,33 @@ $(INSTALL) :
 	$(MV) $(PKG_INSTALL_DIR)/_target/include/c++/$(PKG_VER) $(PKG_INSTALL_DIR)/_target/include/c++/_gcc_version
 	$(MV) $(PKG_INSTALL_DIR)/_target/include/c++/_gcc_version/$(AUTOCONF_TARGET_TRIPLET) \
 		$(PKG_INSTALL_DIR)/_target/include/c++/_gcc_version/_target
+=======
+	$(eval BITS_HEADERS := $(wildcard $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/bits/*))
+	$(eval BITS_HEADERS := $(filter-out $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/bits/stamp-bits, $(BITS_HEADERS)))
+	$(eval BITS_TARGET_HEADERS := $(wildcard $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/$(AUTOCONF_TARGET_TRIPLET)/bits/*))
+	$(eval EXT_HEADERS := $(wildcard $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/ext/*))
+	$(eval DEBUG_HEADERS := $(wildcard $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/debug/*))
+	$(eval BACKWARD_HEADERS := $(wildcard $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/backward/*))
+
+	mkdir -p $(PKG_INSTALL_DIR)/include $(PKG_INSTALL_DIR)/include/bits
+	mkdir -p $(PKG_INSTALL_DIR)/include/std $(PKG_INSTALL_DIR)/include/ext
+	mkdir -p $(PKG_INSTALL_DIR)/include/debug $(PKG_INSTALL_DIR)/include/backward
+	cp $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libgcc/unwind.h $(PKG_INSTALL_DIR)/include/
+	cp $(PKG_SOURCE_DIR)/libstdc++-v3/libsupc++/cxxabi.h $(PKG_INSTALL_DIR)/include/
+	cp $(PKG_SOURCE_DIR)/libstdc++-v3/libsupc++/exception $(PKG_INSTALL_DIR)/include/
+	cp $(PKG_SOURCE_DIR)/libstdc++-v3/libsupc++/initializer_list $(PKG_INSTALL_DIR)/include/
+	cp $(PKG_SOURCE_DIR)/libstdc++-v3/libsupc++/new $(PKG_INSTALL_DIR)/include/
+	cp $(PKG_SOURCE_DIR)/libstdc++-v3/libsupc++/typeinfo $(PKG_INSTALL_DIR)/include/
+	cp $(PKG_SOURCE_DIR)/libstdc++-v3/libsupc++/atomic_lockfree_defines.h $(PKG_INSTALL_DIR)/include/bits/
+	cp -r $(BITS_HEADERS) $(PKG_INSTALL_DIR)/include/bits/
+	cp -r $(BITS_TARGET_HEADERS) $(PKG_INSTALL_DIR)/include/bits/
+	cp -r $(EXT_HEADERS) $(PKG_INSTALL_DIR)/include/ext/
+	cp -r $(DEBUG_HEADERS) $(PKG_INSTALL_DIR)/include/debug/
+	cp -r $(BACKWARD_HEADERS) $(PKG_INSTALL_DIR)/include/backward/
+	cd $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/include/; cp $(STL_HEADERS) $(PKG_INSTALL_DIR)/include/std/; cd ..; \
+	mkdir -p $(PKG_INSTALL_DIR)/lib
+	cp $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libgcc/libgcc.a $(PKG_INSTALL_DIR)/lib/
+	cp $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/libsupc++/.libs/libsupc++.a $(PKG_INSTALL_DIR)/lib
+	cp $(PKG_BUILD_DIR)/$(AUTOCONF_TARGET_TRIPLET)/libstdc++-v3/src/.libs/libstdc++.a $(PKG_INSTALL_DIR)/lib
+>>>>>>> 483b1127f... third_party: Compile gcc STL without exceptions also
 	touch $@
