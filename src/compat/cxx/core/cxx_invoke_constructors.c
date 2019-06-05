@@ -17,6 +17,15 @@ void register_eh_frame(void) {
 	__register_frame((void *)&_eh_frame_begin);
 }
 
+__attribute__((weak)) void __register_frame(void *begin) {
+}
+
+static int register_eh_frame(void) {
+	extern const char __EH_FRAME_BEGIN__;
+	__register_frame((void *)&__EH_FRAME_BEGIN__);
+	return 0;
+}
+
 void cxx_invoke_constructors(void) {
 	extern const char _ctors_start, _ctors_end;
 	typedef void (*ctor_func_t)(void);
