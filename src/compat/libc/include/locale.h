@@ -32,9 +32,9 @@ __BEGIN_DECLS
 #define LC_MEASUREMENT	  11
 #define LC_IDENTIFICATION 12
 
-static inline char * setlocale(int category, const char *locale) {
+static inline char *setlocale(int category, const char *locale) {
 	(void)category; (void)locale;
-	return NULL;
+	return "";
 }
 
 __END_DECLS

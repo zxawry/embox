@@ -38,39 +38,35 @@ module core {
 	@NoRuntime depends embox.compat.posix.sys.mman.msync
 }
 
-@Build(stage=2,script="true")
-@BuildDepends(core)
+@AutoCmd
 @Cmd(name = "qpidd",
 	help = "qpidd",
 	man = '''
 		AUTHORS
 			Alexander Kalmuk
 	''')
-module qpidd {
-	@Rule(script="$(EXTERNAL_MAKE) -f $(abspath $(ROOT_DIR))/mk/main-stripping.mk TARGET_APP='$(module_id)' FILE_APP='$(abspath $@)'")
-	@AddPrefix("^BUILD/extbld/third_party/qpid/core/install/bin")
-	source "strip.QpiddBroker.o"
-
-	@AddPrefix("^BUILD/extbld/third_party/qpid/core/install/bin")
-	source "qpidd.o"
-
-	@NoRuntime depends third_party.qpid.core
-	depends embox.compat.posix.stubs
-}
-
 @Build(stage=2,script="true")
 @BuildDepends(core)
+module qpidd {
+	@AddPrefix("^BUILD/extbld/third_party/qpid/core/install/bin")
+	source "QpiddBroker.o",
+		"qpidd.o"
+
+	@NoRuntime depends third_party.qpid.core
+}
+
+@AutoCmd
 @Cmd(name = "qpidd_hello",
 	help = "simple qpid broker test",
 	man = '''
 		AUTHORS
 			Alexander Kalmuk
 	''')
+@Build(stage=2,script="true")
+@BuildDepends(core)
 module qpidd_hello {
-	@Rule(script="$(EXTERNAL_MAKE) -f $(abspath $(ROOT_DIR))/mk/main-stripping.mk TARGET_APP='$(module_id)' FILE_APP='$(abspath $@)'")
 	@AddPrefix("^BUILD/extbld/third_party/qpid/core/install/bin")
-	source "strip.hello_world.o"
+	source "hello_world.o"
 
 	@NoRuntime depends third_party.qpid.core
-	depends embox.compat.posix.stubs
 }

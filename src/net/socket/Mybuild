@@ -15,7 +15,7 @@ module tcp_sock {
 	option number log_level=0
 
 	source "tcp_sock.c"
-	option number amount_tcp_sock=20
+	option number amount_tcp_sock=40
 	option number max_simultaneous_tx_pack = 0
 
 	depends route
@@ -43,7 +43,7 @@ module udp_sock {
 
 module af_inet {
 	source "af_inet.c"
-	option number amount_inet_sock=20
+	option number amount_inet_sock=30
 
 	depends sock
 	depends route
@@ -54,7 +54,7 @@ module af_inet {
 
 module af_inet6 {
 	source "af_inet6.c"
-	option number amount_inet6_sock=20
+	option number amount_inet6_sock=30
 
 	depends sock
 	depends family
