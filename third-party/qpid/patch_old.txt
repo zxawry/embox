@@ -1,6 +1,6 @@
 diff -aur qpid-cpp-1.39.0/CMakeLists.txt ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/CMakeLists.txt
 --- qpid-cpp-1.39.0/CMakeLists.txt	2018-10-22 01:43:10.000000000 +0300
-+++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/CMakeLists.txt	2019-06-05 17:51:03.469962000 +0300
++++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/CMakeLists.txt	2019-06-03 15:05:35.384995461 +0300
 @@ -147,7 +147,7 @@
    # -Wunreachable-code -Wpadded -Winline
    # -Wshadow - warns about boost headers.
@@ -27,7 +27,7 @@ diff -aur qpid-cpp-1.39.0/CMakeLists.txt ../build/extbld/third_party/qpid/core/q
  
 diff -aur qpid-cpp-1.39.0/src/CMakeLists.txt ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/CMakeLists.txt
 --- qpid-cpp-1.39.0/src/CMakeLists.txt	2018-10-22 01:43:10.000000000 +0300
-+++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/CMakeLists.txt	2019-06-05 17:51:03.473962064 +0300
++++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/CMakeLists.txt	2019-06-03 15:05:35.384995461 +0300
 @@ -152,7 +152,7 @@
  endif (VALGRIND_FOUND)
  
@@ -39,7 +39,7 @@ diff -aur qpid-cpp-1.39.0/src/CMakeLists.txt ../build/extbld/third_party/qpid/co
    endif (ENABLE_WARNING_ERROR)
 diff -aur qpid-cpp-1.39.0/src/qpid/broker/SelectorExpression.cpp ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/qpid/broker/SelectorExpression.cpp
 --- qpid-cpp-1.39.0/src/qpid/broker/SelectorExpression.cpp	2018-10-22 01:43:10.000000000 +0300
-+++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/qpid/broker/SelectorExpression.cpp	2019-06-05 17:51:03.473962064 +0300
++++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/qpid/broker/SelectorExpression.cpp	2019-06-03 15:23:52.227679172 +0300
 @@ -27,6 +27,7 @@
  #include "qpid/sys/IntegerTypes.h"
  #include "qpid/sys/regex.h"
@@ -48,15 +48,3 @@ diff -aur qpid-cpp-1.39.0/src/qpid/broker/SelectorExpression.cpp ../build/extbld
  #include <cstdlib>
  #include <cerrno>
  #include <string>
-diff -aur qpid-cpp-1.39.0/src/qpid/sys/posix/check.h ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/qpid/sys/posix/check.h
---- qpid-cpp-1.39.0/src/qpid/sys/posix/check.h	2018-10-22 01:43:10.000000000 +0300
-+++ ../build/extbld/third_party/qpid/core/qpid-cpp-1.39.0/src/qpid/sys/posix/check.h	2019-06-05 19:22:49.765685698 +0300
-@@ -34,7 +34,7 @@
- 
- /** THROW QPID_POSIX_ERROR(errno) if RESULT is less than zero */
- #define QPID_POSIX_CHECK(RESULT)                        \
--    if ((RESULT) < 0) throw QPID_POSIX_ERROR((errno))
-+    if ((RESULT) < 0) do {} while (0)
- 
- /** Throw a posix error if ERRNO is non-zero */
- #define QPID_POSIX_THROW_IF(ERRNO)              \
