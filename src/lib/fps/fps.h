@@ -18,6 +18,9 @@ extern void fps_set_base_frame(struct fb_info *fb, void *base);
 extern void fps_set_back_frame(struct fb_info *fb, void *base);
 extern void *fps_enable_swap(struct fb_info *fb);
 extern int fps_swap(struct fb_info *fb);
+extern void *fps_enable_backup(struct fb_info *fb);
+extern int fps_backup(struct fb_info *fb);
 extern void *fps_current_frame(struct fb_info *fb);
+extern void fps_free(struct fb_info *fb);
 
 #endif /* LIB_FPS_H_ */

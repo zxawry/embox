@@ -142,6 +142,72 @@ void *fps_enable_swap(struct fb_info *fb) {
 	return fps_sw_base[0];
 }
 
+/**
+ * @brief Create single back buffer to store current frame
+ */
+void *fps_enable_backup(struct fb_info *fb) {
+	size_t screen_sz;
+
+	assert(fb);
+	screen_sz = fb->var.xres * fb->var.yres *
+		fb->var.bits_per_pixel / 8;
+
+	if (fps_sw_base[0] != 0) {
+		log_error("Can't initialize second frame buffer");
+		return fps_sw_base;
+	}
+
+	if (0 == (fps_sw_base[0] = malloc(screen_sz))) {
+		log_error("Failed to allocate buffer");
+		return 0;
+	}
+
+	memset(fps_sw_base[0], 0, screen_sz);
+
+	fps_sw_base[1] = fps_sw_base[0];
+
+	return fps_sw_base[0];
+}
+
+/**
+ * @brief Copy data from back buffer to frame buffer
+ */
+int fps_backup(struct fb_info *fb) {
+	size_t screen_sz;
+
+	if (fb == NULL) {
+		log_error("fb == NULL");
+		return 0;
+	}
+
+	screen_sz = fb->var.xres * fb->var.yres *
+		fb->var.bits_per_pixel / 8;
+
+	memcpy(fb->screen_base, fps_sw_base[0], screen_sz);
+
+	return 0;
+}
+
+/**
+ * @brief Free allocated memory for frame buffers
+ */
+void fps_free(struct fb_info *fb) {
+	if (fb == NULL) {
+		log_error("fb == NULL");
+		return;
+	}
+
+	if (fps_sw_base[0] == NULL || fps_sw_base[1] == NULL) {
+		log_error("Trying to free buffers, but they were not "
+				"allocated yet!");
+		return;
+	}
+
+	free(fps_sw_base[0]);
+	if (fps_sw_base[1] != fps_sw_base[0]) {
+		free(fps_sw_base[1]);
+	}
+}
 
 static int fps_current = 0;
 /**
@@ -168,6 +234,7 @@ int fps_swap(struct fb_info *fb) {
 	assert(fps_sw_base[0]);
 
 	if (fb->ops.fb_set_base != NULL) {
+		log_debug("Current frame=%p\n", fps_current_frame(fb));
 		fb->ops.fb_set_base(fb, fps_current_frame(fb));
 		fps_current++;
 	} else {
