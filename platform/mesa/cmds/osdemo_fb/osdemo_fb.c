@@ -47,7 +47,7 @@ void init_buffers(void) {
 
 	printf("The framebuffer device was mapped to memory successfully.\n");
 
-	sw_base = fps_enable_swap(mesa_fbi);
+	sw_base = fps_enable_backup(mesa_fbi);
 	if (animated_scene) {
 		fps_set_format("Embox MESA demo v0.2\nFPS=%2d");
 	} else {
@@ -57,11 +57,11 @@ void init_buffers(void) {
 
 static void swap_buffers() {
 	fps_print(mesa_fbi);
-	fps_swap(mesa_fbi);
+	fps_backup(mesa_fbi);
 }
 
 static void destroy_video_buffer() {
-
+	fps_free(mesa_fbi);
 }
 
 /*********************************
