@@ -39,8 +39,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-      - run: docker run -d --name emdocker --privileged
-          -u $(id -u):$(id -g)
+      - run:  docker pull docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
+        shell: bash
+      - name: Start emdocker-test
+        run: docker run -d --name emdocker --privileged
           -w $PWD
           -v /home/runner:/home/runner
           --entrypoint tail
