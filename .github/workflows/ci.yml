@@ -48,6 +48,7 @@ jobs:
       - run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
       - run: docker run -d --name emdocker --privileged 
           -u $(id -u):$(id -g) 
           -w $PWD 
