@@ -50,6 +50,7 @@ jobs:
         shell: bash
 
       - run: pwd; echo $PWD
+        shell: bash
       - run: docker run -d --name emdocker --privileged 
           -u $(id -u):$(id -g) 
           -w $PWD 
