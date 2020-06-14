@@ -5,45 +5,53 @@ on: [push]
 jobs:
   ci:
     runs-on: ubuntu-16.04 # Embox NFS write test fails with ubuntu 18.04: "RPC: Can't decode result"
-    services:
-      redis:
-        image: redis
-         
     strategy:
       fail-fast: false
       matrix:
         template:
           - aarch64/qemu
-          - arm/qemu
-          - arm/stm32f4-discovery
-          - x86/qemu
-          - x86/smp
-          - x86/user_apps
-          - x86/qt-app
-          - x86/test/lang
-          - x86/test/net
-          - x86/test/fs
-          - x86/test/units
-          - x86/test/packetdrill
-          - x86/test/qt-vnc
-          - sparc/qemu
-          - mips/qemu
-          - ppc/qemu
-          - microblaze/qemu
-          - usermode86/debug
-    container:
-      image: embox/emdocker-test
-      options: --privileged -v /:/host
+          #- arm/qemu
+          #- arm/stm32f4-discovery
+          #- x86/qemu
+          #- x86/smp
+          #- x86/user_apps
+          #- x86/qt-app
+          #- x86/test/lang
+          #- x86/test/net
+          #- x86/test/fs
+          #- x86/test/units
+          #- x86/test/packetdrill
+          #- x86/test/qt-vnc
+          #- sparc/qemu
+          #- mips/qemu
+          #- ppc/qemu
+          #- microblaze/qemu
+          #- usermode86/debug
+    #container:
+      ##image: docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
+      #image: embox/emdocker-test
+      #options: --privileged 
+    defaults:
+      run:
+        shell: docker exec emdocker bash -e {0}
     steps:
       - uses: actions/checkout@v1
+
       - uses: actions/cache@v2
         with:
           path: |
             mk/.cache
           key: mybuild-${{ hashFiles('**/Mybuild') }}-${{ hashFiles('**/*.my') }}
       - run: scripts/continuous/touch-mk-cache.sh
-      - run: chroot /host modprobe nfsd
+        shell: bash
+
+      - run: modprobe nfsd
         if: matrix.template == 'x86/test/fs'
+        shell: bash
+
+      - run: docker run --name emdocker --privileged -v $PWD:$PWD -w $PWD -u $(id -u):$(id -g) --entrypoint tail embox/emdocker-test -f /dev/null
+        shell: bash
+
       - run: ./scripts/continuous/prepare.sh ${{matrix.template}}
       - run: make confload-${{matrix.template}}
       - run: make -j $(nproc)
