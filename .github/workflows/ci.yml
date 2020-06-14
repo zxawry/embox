@@ -10,37 +10,27 @@ jobs:
       matrix:
         template:
           - aarch64/qemu
-          #- arm/qemu
-          #- arm/stm32f4-discovery
-          #- x86/qemu
-          #- x86/smp
-          #- x86/user_apps
-          #- x86/qt-app
-          #- x86/test/lang
-          #- x86/test/net
-          #- x86/test/fs
-          #- x86/test/units
-          #- x86/test/packetdrill
-          #- x86/test/qt-vnc
-          #- sparc/qemu
-          #- mips/qemu
-          #- ppc/qemu
-          #- microblaze/qemu
-          #- usermode86/debug
+          - arm/qemu
+          - arm/stm32f4-discovery
+          - x86/qemu
+          - x86/smp
+          - x86/user_apps
+          - x86/qt-app
+          - x86/test/lang
+          - x86/test/net
+          - x86/test/fs
+          - x86/test/units
+          - x86/test/packetdrill
+          - x86/test/qt-vnc
+          - sparc/qemu
+          - mips/qemu
+          - ppc/qemu
+          - microblaze/qemu
+          - usermode86/debug
     defaults:
       run:
         shell: docker exec emdocker bash -e {0}
     steps:
-      - uses: actions/checkout@v1
-
-      - uses: actions/cache@v2
-        with:
-          path: |
-            mk/.cache
-          key: mybuild-${{ hashFiles('**/Mybuild') }}-${{ hashFiles('**/*.my') }}
-      - run: scripts/continuous/touch-mk-cache.sh
-        shell: bash
-
       - run: modprobe nfsd
         if: matrix.template == 'x86/test/fs'
         shell: bash
@@ -49,14 +39,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-      - run: docker run -d --name emdocker --privileged 
-          -u $(id -u):$(id -g) 
-          -w $PWD 
+      - run: docker run -d --name emdocker --privileged
+          -u $(id -u):$(id -g)
+          -w $PWD
           -v /home/runner:/home/runner
-          --entrypoint tail 
+          --entrypoint tail
           docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
           -f /dev/null
         shell: bash
+
+      - uses: actions/checkout@v1
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            mk/.cache
+          key: mybuild-${{ hashFiles('**/Mybuild') }}-${{ hashFiles('**/*.my') }}
+      - run: scripts/continuous/touch-mk-cache.sh
 
       - run: ./scripts/continuous/prepare.sh ${{matrix.template}}
       - run: make confload-${{matrix.template}}
