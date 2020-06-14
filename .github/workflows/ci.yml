@@ -31,6 +31,11 @@ jobs:
       image: docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
       options: --privileged -v /:/host
     steps:
+      - uses: azure/docker-login@v1
+        with:
+          login-server: 'docker.pkg.github.com'
+          username: 'embot'
+          password: 'password'
       - uses: actions/checkout@v1
       - uses: actions/cache@v2
         with:
