@@ -31,7 +31,7 @@ jobs:
       run:
         shell: docker exec emdocker bash -e {0}
     steps:
-      - run: modprobe nfsd
+      - run: sudo modprobe nfsd
         if: matrix.template == 'x86/test/fs'
         shell: bash
 
