@@ -28,7 +28,7 @@ jobs:
           - microblaze/qemu
           - usermode86/debug
     container:
-      image: embox/emdocker-test
+      image: docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
       options: --privileged -v /:/host
     steps:
       - uses: actions/checkout@v1
