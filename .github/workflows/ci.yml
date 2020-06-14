@@ -27,10 +27,6 @@ jobs:
           #- ppc/qemu
           #- microblaze/qemu
           #- usermode86/debug
-    #container:
-      ##image: docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
-      #image: embox/emdocker-test
-      #options: --privileged 
     defaults:
       run:
         shell: docker exec emdocker bash -e {0}
@@ -49,14 +45,15 @@ jobs:
         if: matrix.template == 'x86/test/fs'
         shell: bash
 
-      - run: pwd; echo $PWD
-        shell: bash
+      - run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin docker.pkg.github.com
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: docker run -d --name emdocker --privileged 
           -u $(id -u):$(id -g) 
           -w $PWD 
           -v /home/runner:/home/runner
           --entrypoint tail 
-          embox/emdocker-test 
+          docker.pkg.github.com/embox/emdocker-test/emdocker-test:latest
           -f /dev/null
         shell: bash
 
