@@ -49,7 +49,7 @@ jobs:
         if: matrix.template == 'x86/test/fs'
         shell: bash
 
-      - run: docker run --name emdocker --privileged -v $PWD:$PWD -w $PWD -u $(id -u):$(id -g) --entrypoint tail embox/emdocker-test -f /dev/null
+      - run: docker run -d --name emdocker --privileged -v $PWD:$PWD -w $PWD -u $(id -u):$(id -g) --entrypoint tail embox/emdocker-test -f /dev/null
         shell: bash
 
       - run: ./scripts/continuous/prepare.sh ${{matrix.template}}
