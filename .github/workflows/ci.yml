@@ -5,6 +5,10 @@ on: [push]
 jobs:
   ci:
     runs-on: ubuntu-16.04 # Embox NFS write test fails with ubuntu 18.04: "RPC: Can't decode result"
+    services:
+      redis:
+        image: redis
+         
     strategy:
       fail-fast: false
       matrix:
