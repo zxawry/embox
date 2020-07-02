@@ -16,6 +16,30 @@
 
 static spinlock_t atomic_lock = SPIN_STATIC_UNLOCKED;
 
+static uint32_t __impl_atomic_fetch_add_4(void *mem, uint32_t val, int model) {
+	spin_lock(&atomic_lock);
+	uint32_t ret = *((uint32_t *) mem);
+	*((uint32_t *) mem) += val;
+	spin_unlock(&atomic_lock);
+	return ret;
+}
+
+static uint32_t __impl_atomic_fetch_sub_4(void *mem, uint32_t val, int model) {
+	spin_lock(&atomic_lock);
+	uint32_t ret = *((uint32_t *) mem);
+	*((uint32_t *) mem) -= val;
+	spin_unlock(&atomic_lock);
+	return ret;
+}
+
+static uint64_t __impl_atomic_fetch_sub_8(void *mem, uint64_t val, int model) {
+	spin_lock(&atomic_lock);
+	uint64_t ret = *((uint64_t *) mem);
+	*((uint64_t *) mem) -= val;
+	spin_unlock(&atomic_lock);
+	return ret;
+}
+
 uint8_t __atomic_fetch_sub_1(void *mem, uint8_t val, int model) {
 	spin_lock(&atomic_lock);
 	uint8_t ret = *((uint8_t *) mem);
@@ -33,19 +57,11 @@ uint16_t __atomic_fetch_sub_2(void *mem, uint16_t val, int model) {
 }
 
 uint32_t __atomic_fetch_sub_4(void *mem, uint32_t val, int model) {
-	spin_lock(&atomic_lock);
-	uint32_t ret = *((uint32_t *) mem);
-	*((uint32_t *) mem) -= val;
-	spin_unlock(&atomic_lock);
-	return ret;
+	return __impl_atomic_fetch_sub_4(mem, val, model);
 }
 
 uint64_t __atomic_fetch_sub_8(void *mem, uint64_t val, int model) {
-	spin_lock(&atomic_lock);
-	uint64_t ret = *((uint64_t *) mem);
-	*((uint64_t *) mem) -= val;
-	spin_unlock(&atomic_lock);
-	return ret;
+	return __impl_atomic_fetch_sub_8(mem, val, model);
 }
 
 uint8_t __atomic_fetch_add_1(void *mem, uint8_t val, int model) {
@@ -65,11 +81,7 @@ uint16_t __atomic_fetch_add_2(void *mem, uint16_t val, int model) {
 }
 
 uint32_t __atomic_fetch_add_4(void *mem, uint32_t val, int model) {
-	spin_lock(&atomic_lock);
-	uint32_t ret = *((uint32_t *) mem);
-	*((uint32_t *) mem) += val;
-	spin_unlock(&atomic_lock);
-	return ret;
+	return __impl_atomic_fetch_add_4(mem, val, model);
 }
 
 uint64_t __atomic_fetch_add_8(void *mem, uint64_t val, int model) {
@@ -124,17 +136,21 @@ void __sync_synchronize(void) {
 }
 
 uint32_t __sync_add_and_fetch_4(void *mem, uint32_t val) {
-	return __atomic_fetch_add_4(mem, val, 0) + val;
+	return __impl_atomic_fetch_add_4(mem, val, 0) + val;
 }
 
 uint32_t __sync_sub_and_fetch_4(void *mem, uint32_t val) {
-	return __atomic_fetch_sub_8(mem, val, 0) - val;
+	return __impl_atomic_fetch_sub_8(mem, val, 0) - val;
 }
 
 uint32_t __sync_fetch_and_add_4(void *mem, uint32_t val) {
-	return __atomic_fetch_add_4(mem, val, 0);
+	return __impl_atomic_fetch_add_4(mem, val, 0);
 }
 
 uint32_t __sync_fetch_and_sub_4(void *mem, uint32_t val) {
-	return __atomic_fetch_sub_4(mem, val, 0);
+	return __impl_atomic_fetch_sub_4(mem, val, 0);
+}
+
+uint64_t __sync_fetch_and_sub_8(uint64_t *mem, uint64_t val) {
+	return __impl_atomic_fetch_sub_8(mem, val, 0);
 }
