@@ -4,4 +4,5 @@
 "service telnetd",
 "service httpd",
 "stl_demo_sort1",
+"cxx_threads_demo",
 "tish",
