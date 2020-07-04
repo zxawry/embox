@@ -1,13 +1,13 @@
 
 PKG_NAME := gcc
 
-#PKG_VER  := 4.8.1
-PKG_VER  := 6.3.0
+#PKG_VER  := 6.3.0
+PKG_VER  := 9.3.0
 
 PKG_SOURCES := http://ftp.gnu.org/gnu/gcc/$(PKG_NAME)-$(PKG_VER)/$(PKG_NAME)-$(PKG_VER).tar.gz
 
-#PKG_MD5     := 74cc12b7afe051ab7d0e00269e49fc9b
-PKG_MD5 := 6e5ea04789678f1250c1b30c4d9ec417
+#PKG_MD5 := 6e5ea04789678f1250c1b30c4d9ec417
+PKG_MD5 := 9b7e8f6cfad96114e726c752935af58a
 
 #PKG_PATCHES := pkg_patch.txt
 PKG_PATCHES := patch.txt
@@ -50,11 +50,18 @@ $(CONFIGURE) :
 			--disable-shared \
 			--disable-tls \
 			--disable-nls \
+			--disable-libffi \
+			--disable-libgomp \
+			--disable-libmudflap \
+			--disable-libquadmath \
+			--disable-libstdcxx-pch \
 			--disable-libssp \
+			--disable-bootstrap \
 			--without-headers \
 			--without-newlib \
 			--enable-languages=c,c++ \
 			--enable-soft-float \
+			FLAGS_FOR_TARGET="" \
 			CC_FOR_TARGET=$${EMBOX_CROSS_COMPILE}gcc \
 			CXX_FOR_TARGET=$${EMBOX_CROSS_COMPILE}g++ \
 			CFLAGS_FOR_TARGET="$(cppflags) $(target_libgcc_cppflags) $${EMBOX_IMPORTED_CFLAGS}" \
@@ -65,27 +72,7 @@ $(CONFIGURE) :
 
 $(BUILD) :
 	cd $(PKG_BUILD_DIR) && ( \
-		. $(EMBOX_GCC_ENV) && $(MAKE) MAKEFLAGS='$${EMBOX_IMPORTED_MAKEFLAGS}' \
-			CC_FOR_TARGET=$${EMBOX_CROSS_COMPILE}gcc \
-			GCC_FOR_TARGET=$${EMBOX_CROSS_COMPILE}gcc \
-			CXX_FOR_TARGET=$${EMBOX_CROSS_COMPILE}g++ \
-			RAW_CXX_FOR_TARGET=$${EMBOX_CROSS_COMPILE}g++ \
-			AR_FOR_TARGET=ar \
-			RANLIB_FOR_TARGET=ranlib \
-			TARGET-libiberty="LINKER=true CC=true AR=true RANLIB=touch all" \
-			TARGET-zlib="LINKER=true CC=true AR=true RANLIB=touch all" \
-			TARGET-libbacktrace="LINKER=true CC=true AR=touch \
-				LINK=\"mkdir -p .libs && true\" \
-				LIBS=\"&& touch .libs/libbacktrace.a\" all" \
-			TARGET-libcpp="LINKER=true CC=true CXX=true POSTCOMPILE=true \
-				AR=true RANLIB=touch all" \
-			TARGET-libdecnumber="LINKER=true CC=true AR=true RANLIB=touch all" \
-			TARGET-fixincludes="LINKER=true CC=true AR=true all" \
-			TARGET-lto-plugin="CC=true LIBTOOL=true all" \
-			TARGET-gcc="LINKER=true CC=true AR=true \
-				GCC_FOR_TARGET=$${EMBOX_CROSS_COMPILE}gcc \
-				AR=true RANLIB=true libgcc-support stmp-int-hdrs CXXDEPMODE=true" \
-			TARGET-target-libgcc="PICFLAG= EXTRA_PARTS= all" \
+		. $(EMBOX_GCC_ENV) && $(MAKE) -j $(shell nproc) \
 			all-target-libgcc all-target-libstdc++-v3; \
 	)
 	touch $@
