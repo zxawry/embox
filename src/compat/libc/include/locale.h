@@ -32,9 +32,17 @@ __BEGIN_DECLS
 #define LC_MEASUREMENT	  11
 #define LC_IDENTIFICATION 12
 
+struct lconv {
+
+};
+
 static inline char * setlocale(int category, const char *locale) {
 	(void)category; (void)locale;
 	return NULL;
+}
+
+static inline struct lconv * localeconv(void) {
+
 }
 
 __END_DECLS
