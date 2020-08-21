@@ -13,7 +13,6 @@
 #include <framework/mod/options.h>
 
 /* FIX: add dependency */
-#include <embox/unit.h>
 #include <kernel/printk.h>
 
 #include "stm32f4xx_hal.h"
@@ -21,8 +20,6 @@
 #include <third_party/stmf4cube/usb_stm32f4.h>
 
 #define USB_IRQ OPTION_GET(NUMBER, irq)
-
-EMBOX_UNIT_INIT(usb_stm32f4_init_test);
 
 static int usb_stm32f4_reset_hnd(struct lthread *self);
 static LTHREAD_DEF(usb_stm32f4_reset_lt, usb_stm32f4_reset_hnd, 200);
@@ -131,10 +128,6 @@ static irq_return_t usb_stm32f4_usb_irq_handler(unsigned int irq_nr, void *data)
 	printk("usb: irq entry\n");
 	HAL_PCD_IRQHandler(&hpcd);
 	return IRQ_HANDLED;
-}
-
-static int usb_stm32f4_init_test(void) {
-	return usb_stm32f4_init();
 }
 
 int usb_stm32f4_init(void) {
