@@ -1,5 +1,6 @@
 package third_party.bsp.stmf4cube.stm32f4_discovery
 
+@BuildDepends(third_party.bsp.st_bsp_api)
 module stm32f4_udc {
 	option number log_level = 1
 

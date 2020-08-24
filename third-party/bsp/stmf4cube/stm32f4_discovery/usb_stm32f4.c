@@ -90,17 +90,6 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd) {
 }
 
 /**
- * @brief  Setup stage callback.
- * @param  hpcd: PCD handle
- * @retval None
- */
-void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
-	//USBD_LL_SetupStage(hpcd->pData, (uint8_t *)hpcd->Setup);
-	//here calls a udc function and passes the udc struct address in pData
-	printk("usb: setupstage\n");
-}
-
-/**
  * @brief  Data Out stage callback.
  * @param  hpcd: PCD handle
  * @param  epnum: Endpoint Number
