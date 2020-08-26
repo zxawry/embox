@@ -35,7 +35,10 @@ struct stm32f4_udc {
 	struct usb_gadget_ep *eps[STM32F4_UDC_EPS_COUNT];
 	struct usb_gadget_request *requests[STM32F4_UDC_EPS_COUNT];
 	unsigned int setup_buf_pos;
+	unsigned int tx_in_progress[STM32F4_UDC_EPS_COUNT];
 };
+
+extern PCD_HandleTypeDef hpcd;
 
 static uint8_t ep0_buffer[EP0_BUFFER_SIZE];
 
@@ -90,7 +93,6 @@ static int stm32f4_udc_init(void) {
 }
 
 /* hardware-specific handlers */
-extern PCD_HandleTypeDef hpcd;
 
 static void stm32f4_ll_set_address(struct usb_control_header *req) {
 	uint8_t  dev_addr;
