@@ -98,30 +98,12 @@ static void stm32f4_ll_set_address(struct usb_control_header *req) {
 	if ((req->w_index == 0U) && (req->w_length == 0U) && (req->w_value < 128U)) {
 		dev_addr = (uint8_t)(req->w_value) & 0x7FU;
 
-//		if (pdev->dev_state == USBD_STATE_CONFIGURED)
-//		{
-//			USBD_CtlError(pdev, req);
-//		}
-//		else
-//		{
-			//pdev->dev_address = dev_addr;
-			//(void)USBD_LL_SetUSBAddress(pdev, dev_addr);
 			HAL_PCD_SetAddress(&hpcd, dev_addr);
-			//(void)USBD_CtlSendStatus(pdev);
-			HAL_PCD_EP_Transmit(&hpcd, 0x00U, NULL, 0U); //CtlSendStatus(maybe create inline function?)
-//			if (dev_addr != 0U)
-//			{
-//				pdev->dev_state = USBD_STATE_ADDRESSED;
-//			}
-//			else
-//			{
-//				pdev->dev_state = USBD_STATE_DEFAULT;
-//			}
-//		}
+			//TODO: create function(CtlSendStatus)
+			HAL_PCD_EP_Transmit(&hpcd, 0x00U, NULL, 0U);
 	}
 	else
 	{
-		//USBD_CtlError(pdev, req);
 		HAL_PCD_EP_SetStall(&hpcd, 0x80U); //equivalent to CtlError()
 		HAL_PCD_EP_SetStall(&hpcd, 0U);
 	}
@@ -145,22 +127,11 @@ static void stm32f4_ll_get_status(struct usb_control_header *req) {
 	case USB_REQ_RECIP_DEVICE:
 		/*TODO: add check for w_length != 2bytes */
 
-		//(void)USBD_CtlSendData(pdev, (uint8_t *)&pdev->dev_config_status, 2U);
-		/*
-		pdev->ep0_state = USBD_EP0_DATA_IN;
-		pdev->ep_in[0].total_length = len;
-		pdev->ep_in[0].rem_length = len;
-
-		// Start the transfer
-		(void)USBD_LL_Transmit(pdev, 0x00U, pbuf, len);
-		*/
 		HAL_PCD_EP_Transmit(&hpcd, 0x00U, (uint8_t *) &status, 2U);
 
-	//default:
-	//	USBD_CtlError(pdev, req);
-	//	break;
 		break;
-	//case USB_REQ_RECIP_ENDP:
+	/* TODO: add case for EPs recipient */
+	/* case USB_REQ_RECIP_ENDP: */
 	default:
 		log_error("Unsupported RECIP 0x%x",
 			req->bm_request_type & USB_REQ_RECIP_MASK);
@@ -179,9 +150,6 @@ static void stm32f4_ll_handle_standard_request(struct usb_control_header *req) {
 	int ret;
 
 	switch (req->b_request) {
-//	case USB_REQ_GET_DESCRIPTOR:
-//		USBD_GetDescriptor(pdev, req);
-//		break;
 	case USB_REQ_SET_ADDRESS:
 		stm32f4_ll_set_address(req);
 		break;
@@ -189,28 +157,27 @@ static void stm32f4_ll_handle_standard_request(struct usb_control_header *req) {
 		stm32f4_ll_set_configuration(req);
 		break;
 	case USB_REQ_GET_CONFIG:
-		//USBD_GetConfig(pdev, req);
+		//stm32f4_ll_get_configuration(req);
 		log_debug("GET_CONFIGURATION");
 		break;
 	case USB_REQ_GET_STATUS:
 		stm32f4_ll_get_status(req);
 		break;
-//	case USB_REQ_SET_FEATURE:
-//		USBD_SetFeature(pdev, req);
-//		break;
-//	case USB_REQ_CLEAR_FEATURE:
-//		USBD_ClrFeature(pdev, req);
-//		break;
+	case USB_REQ_SET_FEATURE:
+		//stm32f4_ll_set_feature(req);
+		log_debug("SET_FEATURE");
+		break;
+	case USB_REQ_CLEAR_FEATURE:
+		//stm32f4_ll_clear_feature(req);
+		log_debug("CLEAR_FEATURE");
+		break;
 	default:
 		ret = usb_gadget_setup(stm32f4_udc.udc.composite,
 			(const struct usb_control_header *) req, NULL);
 		if (ret != 0) {
 			log_error("Not implemented req 0x%x", req->b_request);
-			HAL_PCD_EP_SetStall(&hpcd, req->bm_request_type & 0x80U); //stall the EP
+			HAL_PCD_EP_SetStall(&hpcd, req->bm_request_type & 0x80U);
 		}
-		//USBD_CtlError(pdev, req);
-		//HAL_PCD_EP_SetStall(&hpcd, 0x80U); //equivalent to CtlError()
-		//HAL_PCD_EP_SetStall(&hpcd, 0U);
 		break;
 	}
 }
@@ -221,11 +188,11 @@ static void stm32f4_ll_handle_standard_request(struct usb_control_header *req) {
  * @retval None
  */
 void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
-	//TODO: would be nice to have a gadget state struct to contain all the info
+	//TODO: nice to have a gadget state struct to contain all the info
 	struct usb_gadget_request *req;
 	int ret;
 
-	//struct usb_control_header *ctrl = (struct usb_control_header *)hpcd->Setup;
+	/* struct usb_control_header *ctrl = (struct usb_control_header *)hpcd->Setup; */
 	struct usb_control_header ctrl;
 	memcpy(&ctrl, hpcd->Setup, sizeof(struct usb_control_header));
 
@@ -240,10 +207,10 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
 		break;
 	default:
 		ret = usb_gadget_setup(stm32f4_udc.udc.composite,
-			(const struct usb_control_header *) &ctrl, ep0_buffer); //test w/o the cast
+			(const struct usb_control_header *) &ctrl, ep0_buffer);
 		if (ret != 0) {
 			log_error("Setup failed, request=0x%x", ctrl.b_request);
-			HAL_PCD_EP_SetStall(hpcd, ctrl.bm_request_type & 0x80U); //stall the EP
+			HAL_PCD_EP_SetStall(hpcd, ctrl.bm_request_type & 0x80U);
 		}
 		break;
 	}
