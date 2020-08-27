@@ -62,6 +62,7 @@ static int stm32f4_udc_ep_queue(struct usb_gadget_ep *ep,
 		while (u->tx_in_progress[ep->nr]) {
 		}
 		u->tx_in_progress[ep->nr] = 1;
+		/* shouldnt this be able to handle requests over EP max length? */
 		HAL_PCD_EP_Transmit(&hpcd, ep->nr, req->buf, req->len);
 	}
 
@@ -174,6 +175,7 @@ static void stm32f4_ll_handle_standard_request(struct usb_control_header *req) {
 		log_debug("CLEAR_FEATURE");
 		break;
 	default:
+		printk("usb:if\n");
 		ret = usb_gadget_setup(stm32f4_udc.udc.composite,
 			(const struct usb_control_header *) req, NULL);
 		if (ret != 0) {
@@ -216,4 +218,155 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
 		}
 		break;
 	}
+}
+
+/**
+  * @brief  Data In stage callback.
+  * @param  hpcd: PCD handle
+  * @param  epnum: Endpoint Number
+  * @retval None
+  */
+void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
+	printk("usb: dataINstage\n");
+	struct usb_gadget_request *req;
+
+	stm32f4_udc.tx_in_progress[epnum] = 0;
+
+	if (epnum == 0) {
+		//hw_usb_ep_rx_enable(0);
+		HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+		return;
+	} else {
+		req = stm32f4_udc.requests[epnum];
+		assert(req);
+
+		stm32f4_udc.requests[epnum] = NULL;
+
+		log_debug("req complete, ep=%d", epnum);
+
+		if (req->complete) {
+			req->complete(stm32f4_udc.eps[epnum], req);
+		}
+	}
+}
+//	//USBD_LL_DataInStage(hpcd->pData, epnum, hpcd->IN_ep[epnum].xfer_buff);
+//	//void USBD_LL_DataInStage(USBD_HandleTypeDef *pdev, uint8_t epnum, uint8_t *pdata) {
+//  USBD_EndpointTypeDef *pep;
+////	uint8_t *pdata = hpcd->IN_ep[epnum
+//
+//	if (epnum == 0U) {
+//		pep = &pdev->ep_in[0];
+//
+//		if (pep->rem_length > pep->maxpacket) { //this will transmit in more than this pkt
+//			pep->rem_length -= pep->maxpacket;
+//
+//			//(void)USBD_CtlContinueSendData(pdev, pdata, pep->rem_length);
+//			HAL_PCD_EP_Transmit(hpcd, 0x00U, pdata, pep->rem_length);
+//			/* Prepare endpoint for premature end of transfer */
+//		 //(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
+//			HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+//		} else { //this will end in this pkt
+//			/* last packet is MPS multiple, so send ZLP packet */
+//			if ((pep->maxpacket == pep->rem_length) &&
+//					(pep->total_length >= pep->maxpacket) &&
+//					(pep->total_length < pdev->ep0_data_len)) {
+//				//(void)USBD_CtlContinueSendData(pdev, NULL, 0U);
+//				HAL_PCD_EP_Transmit(hpcd, 0x00U, pdata, pep->rem_length);
+//				pdev->ep0_data_len = 0U;
+//				/* Prepare endpoint for premature end of transfer */
+//				//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
+//				HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+//			} else {
+//				if ((pdev->pClass->EP0_TxSent != NULL) &&
+//						(pdev->dev_state == USBD_STATE_CONFIGURED)) {
+//					pdev->pClass->EP0_TxSent(pdev);
+//				}
+//				//(void)USBD_LL_StallEP(pdev, 0x80U);
+//				HAL_PCD_EP_SetStall(hpcd, 0x80U);
+//				//(void)USBD_CtlReceiveStatus(pdev);
+//					/* Set EP0 State */
+//					pdev->ep0_state = USBD_EP0_STATUS_OUT;
+//					/* Start the transfer */
+//					//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
+//					HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+//			}
+//		}
+//	}
+//	/*  uncomment for EP!=0 later */
+////  else if ((pdev->pClass->DataIn != NULL) &&
+////           (pdev->dev_state == USBD_STATE_CONFIGURED))
+////  {
+////    (USBD_StatusTypeDef)pdev->pClass->DataIn(pdev, epnum);
+////  }
+////  else
+////  {
+////    /* should never be in this condition */
+////    /* maybe add a log instead of return */
+////  }
+//}
+
+
+/**
+  * @brief  Reset callback.
+  * @param  hpcd: PCD handle
+  * @retval None
+  */
+void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
+	/* Reset Device */
+/*	printk("ep0[OUT]_info:\n"
+			"num:%d,"
+			"in/out:%d,"
+			"stall:%d,"
+			"type:%d,"
+			"pid:%d,"
+			"tx_fifo:%d,"
+			"maxpacket:%d,"
+			"xfer_len:%d,"
+			"xfer_cnt:%d\n",
+			hpcd->OUT_ep[0].num,
+			hpcd->OUT_ep[0].is_in,
+			hpcd->OUT_ep[0].is_stall,
+			hpcd->OUT_ep[0].type,
+			hpcd->OUT_ep[0].data_pid_start,
+			hpcd->OUT_ep[0].tx_fifo_num,
+			hpcd->OUT_ep[0].maxpacket,
+			hpcd->OUT_ep[0].xfer_len,
+			hpcd->OUT_ep[0].xfer_count);
+
+	printk("ep0[IN]_info:\n"
+			"num:%d,"
+			"in/out:%d,"
+			"stall:%d,"
+			"type:%d,"
+			"pid:%d,"
+			"tx_fifo:%d,"
+			"maxpacket:%d,"
+			"xfer_len:%d,"
+			"xfer_cnt:%d\n",
+			hpcd->IN_ep[0].num,
+			hpcd->IN_ep[0].is_in,
+			hpcd->IN_ep[0].is_stall,
+			hpcd->IN_ep[0].type,
+			hpcd->IN_ep[0].data_pid_start,
+			hpcd->IN_ep[0].tx_fifo_num,
+			hpcd->IN_ep[0].maxpacket,
+			hpcd->IN_ep[0].xfer_len,
+			hpcd->IN_ep[0].xfer_count);
+			*/
+
+	/*TODO: DeInit some stuff */
+
+	/* Open EP0 OUT */
+  //(void)USBD_LL_OpenEP(pdev, 0x00U, USBD_EP_TYPE_CTRL, USB_MAX_EP0_SIZE);
+  HAL_PCD_EP_Open(hpcd, 0x00U, 64U, EP_TYPE_CTRL); /* EP0_MAX_SIZE */
+  //pdev->ep_out[0x00U & 0xFU].is_used = 1U;
+
+  //pdev->ep_out[0].maxpacket = USB_MAX_EP0_SIZE;
+
+  /* Open EP0 IN */
+  //(void)USBD_LL_OpenEP(pdev, 0x80U, USBD_EP_TYPE_CTRL, USB_MAX_EP0_SIZE);
+  HAL_PCD_EP_Open(hpcd, 0x80U, 64U, EP_TYPE_CTRL); /* EP0_MAX_SIZE */
+  //pdev->ep_in[0x80U & 0xFU].is_used = 1U;
+
+  //pdev->ep_in[0].maxpacket = USB_MAX_EP0_SIZE;
 }
