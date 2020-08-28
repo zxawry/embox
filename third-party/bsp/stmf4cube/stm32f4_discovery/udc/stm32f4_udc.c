@@ -228,10 +228,10 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
   * @retval None
   */
 void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
-	printk("usb: dataINstage\n");
+	printk("usb: dataINstage of 0x%x\n", epnum);
 	struct usb_gadget_request *req;
 
-	stm32f4_udc.tx_in_progress[epnum] = 0;
+	stm32f4_udc.tx_in_progress[epnum & 0x0f] = 0;
 
 	if (epnum == 0) {
 		//hw_usb_ep_rx_enable(0);
@@ -306,6 +306,43 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 ////  }
 //}
 
+/**
+ * @brief  Data Out stage callback.
+ * @param  hpcd: PCD handle
+ * @param  epnum: Endpoint Number
+ * @retval None
+ */
+void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
+	//USBD_LL_DataOutStage(hpcd->pData, epnum, hpcd->OUT_ep[epnum].xfer_buff);
+	printk("usb: dataOUTstage\n");
+
+//	if (epnum == 0U)
+//	{
+//		pep = &pdev->ep_out[0];
+//
+////		if (pdev->ep0_state == USBD_EP0_DATA_OUT)
+////		{
+//		if (pep->rem_length > pep->maxpacket)
+//		{
+//			pep->rem_length -= pep->maxpacket;
+//
+//			//(void)USBD_CtlContinueRx(pdev, pdata, MIN(pep->rem_length, pep->maxpacket));
+//			//(void)USBD_LL_PrepareReceive(pdev, 0U, pbuf, len);
+//			HAL_PCD_EP_Receive(hpcd, ep_addr, pbuf, size);
+//		}
+//		else
+//		{
+//			if ((pdev->pClass->EP0_RxReady != NULL) &&
+//					(pdev->dev_state == USBD_STATE_CONFIGURED))
+//			{
+//				pdev->pClass->EP0_RxReady(pdev);
+//			}
+//			//(void)USBD_CtlSendStatus(pdev);
+//			HAL_PCD_EP_Transmit(hpcd, 0x00U, NULL, 0U);
+//		}
+////		}
+//	}
+}
 
 /**
   * @brief  Reset callback.

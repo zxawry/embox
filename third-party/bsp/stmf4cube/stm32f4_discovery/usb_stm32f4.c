@@ -90,17 +90,6 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd) {
 }
 
 /**
- * @brief  Data Out stage callback.
- * @param  hpcd: PCD handle
- * @param  epnum: Endpoint Number
- * @retval None
- */
-void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
-	//USBD_LL_DataOutStage(hpcd->pData, epnum, hpcd->OUT_ep[epnum].xfer_buff);
-	printk("usb: dataOUTstage\n");
-}
-
-/**
 	* @brief  Connect callback.
 	* @param  hpcd: PCD handle
 	* @retval None
