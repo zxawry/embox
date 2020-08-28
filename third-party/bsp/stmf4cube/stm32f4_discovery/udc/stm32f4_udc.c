@@ -24,19 +24,33 @@
 
 EMBOX_UNIT_INIT(stm32f4_udc_init);
 
-#define EP0_BUFFER_SIZE 1024
-#define STM32F4_UDC_EPS_COUNT 7
+#define USB_MAX_EP0_SIZE 64U
 
-#define STM32F4_UDC_IN_EP_MASK   ((1 << 1) | (1 << 3) | (1 << 5))
-#define STM32F4_UDC_OUT_EP_MASK  ((1 << 2) | (1 << 4) | (1 << 6))
+#define EP0_BUFFER_SIZE 1024
+#define STM32F4_UDC_EPS_COUNT 8 /* IN and OUT */
+
+#define STM32F4_UDC_IN_EP_MASK   ((1 << 5) | (1 << 6) | (1 << 7))
+#define STM32F4_UDC_OUT_EP_MASK  ((1 << 1) | (1 << 2) | (1 << 3))
+
+struct USBD_EndpointTypeDef {
+//  uint32_t status;
+  uint32_t total_length;
+  uint32_t rem_length;
+  uint32_t maxpacket;
+  uint8_t is_used;
+//  uint16_t bInterval;
+};
 
 struct stm32f4_udc {
 	struct usb_udc udc;
 	struct usb_gadget_ep *eps[STM32F4_UDC_EPS_COUNT];
 	struct usb_gadget_request *requests[STM32F4_UDC_EPS_COUNT];
-	unsigned int setup_buf_pos;
-	unsigned int tx_in_progress[STM32F4_UDC_EPS_COUNT];
+	//unsigned int setup_buf_pos;
+	//unsigned int tx_in_progress[STM32F4_UDC_EPS_COUNT];
+	struct USBD_EndpointTypeDef ep_info[STM32F4_UDC_EPS_COUNT];
+	uint32_t ep0_data_len;
 };
+
 
 extern PCD_HandleTypeDef hpcd;
 
@@ -59,10 +73,14 @@ static int stm32f4_udc_ep_queue(struct usb_gadget_ep *ep,
 	if (ep->nr == 0 || ep->dir == USB_DIR_IN) {
 		/* It would be better to use queue here, put req in queue,
 		 * then get next req from queue after current finished. */
-		while (u->tx_in_progress[ep->nr]) {
+		while (u->ep_info[0x4 | ep->nr].is_used) {
 		}
-		u->tx_in_progress[ep->nr] = 1;
 		/* shouldnt this be able to handle requests over EP max length? */
+		//pdev->ep0_state = USBD_EP0_DATA_IN;
+		u->ep_info[0x4 | ep->nr].is_used = 1;
+		u->ep_info[0x4 | ep->nr].total_length = req->len;
+		u->ep_info[0x4 | ep->nr].rem_length = req->len;
+
 		HAL_PCD_EP_Transmit(&hpcd, ep->nr, req->buf, req->len);
 	}
 
@@ -99,11 +117,13 @@ static void stm32f4_ll_set_address(struct usb_control_header *req) {
 	uint8_t  dev_addr;
 
 	if ((req->w_index == 0U) && (req->w_length == 0U) && (req->w_value < 128U)) {
-		dev_addr = (uint8_t)(req->w_value) & 0x7FU;
 
-			HAL_PCD_SetAddress(&hpcd, dev_addr);
-			//TODO: create function(CtlSendStatus)
-			HAL_PCD_EP_Transmit(&hpcd, 0x00U, NULL, 0U);
+		dev_addr = (uint8_t)(req->w_value) & 0x7FU;
+		HAL_PCD_SetAddress(&hpcd, dev_addr);
+		log_debug("addr=0x%x", dev_addr);
+
+		//TODO: create function(CtlSendStatus)
+		HAL_PCD_EP_Transmit(&hpcd, 0x00U, NULL, 0U);
 	}
 	else
 	{
@@ -115,7 +135,7 @@ static void stm32f4_ll_set_address(struct usb_control_header *req) {
 static void stm32f4_ll_set_configuration(struct usb_control_header *req) {
 	int config = req->w_value & 0xff;
 
-	log_debug("addr=0x%x", config);
+	log_debug("conf=0x%x", config);
 
 	/*TODO: add check for config not found */
 	usb_gadget_set_config(stm32f4_udc.udc.composite, config);
@@ -206,6 +226,8 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
 			ctrl.bm_request_type, ctrl.b_request, ctrl.w_value, ctrl.w_index, ctrl.w_length);
 			//ctrl->bm_request_type, ctrl->b_request, ctrl->w_value, ctrl->w_index, ctrl->w_length);
 
+  stm32f4_udc.ep0_data_len = ctrl.w_length;
+
 	switch (ctrl.bm_request_type & USB_REQ_TYPE_MASK) {
 	case USB_REQ_TYPE_STANDARD:
 		stm32f4_ll_handle_standard_request(&ctrl);
@@ -229,12 +251,15 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
   */
 void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 	printk("usb: dataINstage of 0x%x\n", epnum);
-	struct usb_gadget_request *req;
+/*	struct usb_gadget_request *req;
 
-	stm32f4_udc.tx_in_progress[epnum & 0x0f] = 0;
+	stm32f4_udc.tx_in_progress[epnum] = 0;
 
 	if (epnum == 0) {
 		//hw_usb_ep_rx_enable(0);
+		hpcd->IN_ep[epnum].xfer_buff
+
+		HAL_PCD_EP_Transmit(hpcd, 0x00U, hcpd->IN_ep[epnum].xfer_buff, pep->rem_length);
 		HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
 		return;
 	} else {
@@ -250,61 +275,64 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 		}
 	}
 }
-//	//USBD_LL_DataInStage(hpcd->pData, epnum, hpcd->IN_ep[epnum].xfer_buff);
-//	//void USBD_LL_DataInStage(USBD_HandleTypeDef *pdev, uint8_t epnum, uint8_t *pdata) {
-//  USBD_EndpointTypeDef *pep;
-////	uint8_t *pdata = hpcd->IN_ep[epnum
-//
-//	if (epnum == 0U) {
-//		pep = &pdev->ep_in[0];
-//
-//		if (pep->rem_length > pep->maxpacket) { //this will transmit in more than this pkt
-//			pep->rem_length -= pep->maxpacket;
-//
-//			//(void)USBD_CtlContinueSendData(pdev, pdata, pep->rem_length);
-//			HAL_PCD_EP_Transmit(hpcd, 0x00U, pdata, pep->rem_length);
-//			/* Prepare endpoint for premature end of transfer */
-//		 //(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
-//			HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
-//		} else { //this will end in this pkt
-//			/* last packet is MPS multiple, so send ZLP packet */
-//			if ((pep->maxpacket == pep->rem_length) &&
-//					(pep->total_length >= pep->maxpacket) &&
-//					(pep->total_length < pdev->ep0_data_len)) {
-//				//(void)USBD_CtlContinueSendData(pdev, NULL, 0U);
-//				HAL_PCD_EP_Transmit(hpcd, 0x00U, pdata, pep->rem_length);
-//				pdev->ep0_data_len = 0U;
-//				/* Prepare endpoint for premature end of transfer */
-//				//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
-//				HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
-//			} else {
-//				if ((pdev->pClass->EP0_TxSent != NULL) &&
-//						(pdev->dev_state == USBD_STATE_CONFIGURED)) {
-//					pdev->pClass->EP0_TxSent(pdev);
-//				}
-//				//(void)USBD_LL_StallEP(pdev, 0x80U);
-//				HAL_PCD_EP_SetStall(hpcd, 0x80U);
-//				//(void)USBD_CtlReceiveStatus(pdev);
-//					/* Set EP0 State */
-//					pdev->ep0_state = USBD_EP0_STATUS_OUT;
-//					/* Start the transfer */
-//					//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
-//					HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
-//			}
-//		}
-//	}
-//	/*  uncomment for EP!=0 later */
-////  else if ((pdev->pClass->DataIn != NULL) &&
-////           (pdev->dev_state == USBD_STATE_CONFIGURED))
-////  {
-////    (USBD_StatusTypeDef)pdev->pClass->DataIn(pdev, epnum);
-////  }
-////  else
-////  {
-////    /* should never be in this condition */
-////    /* maybe add a log instead of return */
-////  }
-//}
+*/
+	//USBD_LL_DataInStage(hpcd->pData, epnum, hpcd->IN_ep[epnum].xfer_buff);
+	//void USBD_LL_DataInStage(USBD_HandleTypeDef *pdev, uint8_t epnum, uint8_t *pdata) {
+  struct USBD_EndpointTypeDef *pep;
+
+	if (epnum == 0U) {
+		//pep = &pdev->ep_in[0];
+		pep = &stm32f4_udc.ep_info[0x4 | epnum];
+
+		if (pep->rem_length > pep->maxpacket) { //this will transmit in more than this pkt
+			pep->rem_length -= pep->maxpacket;
+
+			//(void)USBD_CtlContinueSendData(pdev, pdata, pep->rem_length);
+			HAL_PCD_EP_Transmit(hpcd, 0U, hpcd->IN_ep[epnum].xfer_buff, pep->rem_length);
+			/* Prepare endpoint for premature end of transfer */
+		 //(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
+			HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+		} else { //this will end in this pkt
+			/* last packet is MPS multiple, so send ZLP packet */
+			if ((pep->maxpacket == pep->rem_length) &&
+					(pep->total_length >= pep->maxpacket) &&
+					(pep->total_length < stm32f4_udc.ep0_data_len)) {
+				//(void)USBD_CtlContinueSendData(pdev, NULL, 0U);
+				HAL_PCD_EP_Transmit(hpcd, 0U, NULL, 0U);
+				stm32f4_udc.ep0_data_len = 0U;
+				/* Prepare endpoint for premature end of transfer */
+				//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
+				HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+			} else {
+				printk("datain:?\n");
+				//if ((pdev->pClass->EP0_TxSent != NULL) &&
+				//		(pdev->dev_state == USBD_STATE_CONFIGURED)) {
+				//	pdev->pClass->EP0_TxSent(pdev);
+				//}
+				//(void)USBD_LL_StallEP(pdev, 0x80U);
+				stm32f4_udc.ep_info[0x4 | epnum].is_used = 0;
+				HAL_PCD_EP_SetStall(hpcd, 0x80U);
+				//(void)USBD_CtlReceiveStatus(pdev);
+					/* Set EP0 State */
+					//pdev->ep0_state = USBD_EP0_STATUS_OUT;
+					/* Start the transfer */
+					//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
+					HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+			}
+		}
+	}
+	/*  uncomment for EP!=0 later */
+//  else if ((pdev->pClass->DataIn != NULL) &&
+//           (pdev->dev_state == USBD_STATE_CONFIGURED))
+//  {
+//    (USBD_StatusTypeDef)pdev->pClass->DataIn(pdev, epnum);
+//  }
+//  else
+//  {
+//    /* should never be in this condition */
+//    /* maybe add a log instead of return */
+//  }
+}
 
 /**
  * @brief  Data Out stage callback.
@@ -351,6 +379,7 @@ void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
   */
 void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
 	/* Reset Device */
+	printk("usb: reset\n");
 /*	printk("ep0[OUT]_info:\n"
 			"num:%d,"
 			"in/out:%d,"
@@ -396,15 +425,15 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
 
 	/* Open EP0 OUT */
   //(void)USBD_LL_OpenEP(pdev, 0x00U, USBD_EP_TYPE_CTRL, USB_MAX_EP0_SIZE);
-  HAL_PCD_EP_Open(hpcd, 0x00U, 64U, EP_TYPE_CTRL); /* EP0_MAX_SIZE */
-  //pdev->ep_out[0x00U & 0xFU].is_used = 1U;
+  HAL_PCD_EP_Open(hpcd, 0x00U, USB_MAX_EP0_SIZE, EP_TYPE_CTRL); /* EP0_MAX_SIZE */
+  //stm32f4_udc.ep_info[0x00U | 0x00U].is_used = 1U;
 
-  //pdev->ep_out[0].maxpacket = USB_MAX_EP0_SIZE;
+  stm32f4_udc.ep_info[0x00U | 0x00U].maxpacket = USB_MAX_EP0_SIZE;
 
   /* Open EP0 IN */
   //(void)USBD_LL_OpenEP(pdev, 0x80U, USBD_EP_TYPE_CTRL, USB_MAX_EP0_SIZE);
-  HAL_PCD_EP_Open(hpcd, 0x80U, 64U, EP_TYPE_CTRL); /* EP0_MAX_SIZE */
-  //pdev->ep_in[0x80U & 0xFU].is_used = 1U;
+  HAL_PCD_EP_Open(hpcd, 0x80U, USB_MAX_EP0_SIZE, EP_TYPE_CTRL); /* EP0_MAX_SIZE */
+  //stm32f4_udc.ep_info[0x04U | 0x00U].is_used = 1U;
 
-  //pdev->ep_in[0].maxpacket = USB_MAX_EP0_SIZE;
+  stm32f4_udc.ep_info[0x04U | 0x00U].maxpacket = USB_MAX_EP0_SIZE;
 }
