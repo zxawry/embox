@@ -179,6 +179,7 @@ static void stm32f4_ll_handle_standard_request(struct usb_control_header *req) {
 		ret = usb_gadget_setup(stm32f4_udc.udc.composite,
 			(const struct usb_control_header *) req, NULL);
 		if (ret != 0) {
+			printk("if_error\n");
 			log_error("Not implemented req 0x%x", req->b_request);
 			HAL_PCD_EP_SetStall(&hpcd, req->bm_request_type & 0x80U);
 		}
