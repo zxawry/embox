@@ -73,8 +73,8 @@ static int stm32f4_udc_ep_queue(struct usb_gadget_ep *ep,
 	if (ep->nr == 0 || ep->dir == USB_DIR_IN) {
 		/* It would be better to use queue here, put req in queue,
 		 * then get next req from queue after current finished. */
-		while (u->ep_info[0x4 | ep->nr].is_used) {
-		}
+//		while (u->ep_info[0x4 | ep->nr].is_used) {
+//		}
 		/* shouldnt this be able to handle requests over EP max length? */
 		//pdev->ep0_state = USBD_EP0_DATA_IN;
 		u->ep_info[0x4 | ep->nr].is_used = 1;
