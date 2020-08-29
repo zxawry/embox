@@ -304,7 +304,7 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 				//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
 				HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
 			} else {
-				printk("datain:?\n");
+				printk("usb: din:?\n");
 				//if ((pdev->pClass->EP0_TxSent != NULL) &&
 				//		(pdev->dev_state == USBD_STATE_CONFIGURED)) {
 				//	pdev->pClass->EP0_TxSent(pdev);
@@ -320,6 +320,8 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 					HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
 			}
 		}
+	} else {
+		printk("usb: din: EP%d\n", epnum);
 	}
 	/*  uncomment for EP!=0 later */
 //  else if ((pdev->pClass->DataIn != NULL) &&
@@ -342,34 +344,36 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
  */
 void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 	//USBD_LL_DataOutStage(hpcd->pData, epnum, hpcd->OUT_ep[epnum].xfer_buff);
-	printk("usb: dataOUTstage\n");
+	printk("usb: dataOUTstage of 0x%x\n", epnum);
 
-//	if (epnum == 0U)
-//	{
-//		pep = &pdev->ep_out[0];
-//
-////		if (pdev->ep0_state == USBD_EP0_DATA_OUT)
-////		{
-//		if (pep->rem_length > pep->maxpacket)
-//		{
-//			pep->rem_length -= pep->maxpacket;
-//
-//			//(void)USBD_CtlContinueRx(pdev, pdata, MIN(pep->rem_length, pep->maxpacket));
-//			//(void)USBD_LL_PrepareReceive(pdev, 0U, pbuf, len);
-//			HAL_PCD_EP_Receive(hpcd, ep_addr, pbuf, size);
+  struct USBD_EndpointTypeDef *pep;
+
+	if (epnum == 0U) {
+		pep = &stm32f4_udc.ep_info[0x00 | epnum];
+		printk("usb: dout: epnum=0x%x;rem=0x%x;maxpkt=0x%x\n", epnum, pep->rem_length, pep->maxpacket);
+
+//		if (pdev->ep0_state == USBD_EP0_DATA_OUT) {
+		if (pep->rem_length > pep->maxpacket) {
+			uint32_t len = pep->rem_length < pep->maxpacket ? pep->rem_length : pep->maxpacket;
+
+			pep->rem_length -= pep->maxpacket;
+
+			//(void)USBD_CtlContinueRx(pdev, pdata, MIN(pep->rem_length, pep->maxpacket));
+			//(void)USBD_LL_PrepareReceive(pdev, 0U, pbuf, len);
+			HAL_PCD_EP_Receive(hpcd, 0U, hpcd->OUT_ep[epnum].xfer_buff, len);
+		} else {
+			printk("usb: dout:?\n");
+			//if ((pdev->pClass->EP0_RxReady != NULL) &&
+			//		(pdev->dev_state == USBD_STATE_CONFIGURED)) {
+			//	pdev->pClass->EP0_RxReady(pdev);
+			//}
+			//(void)USBD_CtlSendStatus(pdev);
+			HAL_PCD_EP_Transmit(hpcd, 0x00U, NULL, 0U);
+		}
 //		}
-//		else
-//		{
-//			if ((pdev->pClass->EP0_RxReady != NULL) &&
-//					(pdev->dev_state == USBD_STATE_CONFIGURED))
-//			{
-//				pdev->pClass->EP0_RxReady(pdev);
-//			}
-//			//(void)USBD_CtlSendStatus(pdev);
-//			HAL_PCD_EP_Transmit(hpcd, 0x00U, NULL, 0U);
-//		}
-////		}
-//	}
+	} else {
+		printk("usb: dout: EP%d\n", epnum);
+	}
 }
 
 /**
