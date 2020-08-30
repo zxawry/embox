@@ -68,6 +68,8 @@ static int stm32f4_udc_ep_queue(struct usb_gadget_ep *ep,
 
 	assert(ep && req);
 
+	log_debug("> ep=%d, len=%d", ep->nr, req->len);
+
 	u->requests[ep->nr] = req;
 
 	if (ep->nr == 0 || ep->dir == USB_DIR_IN) {
@@ -137,10 +139,15 @@ static void stm32f4_ll_set_configuration(struct usb_control_header *req) {
 
 	log_debug("conf=0x%x", config);
 
+#if 1
+	HAL_PCD_EP_SetStall(&hpcd, 0x80U); //equivalent to CtlError()
+	HAL_PCD_EP_SetStall(&hpcd, 0U);
+#else
 	/*TODO: add check for config not found */
 	usb_gadget_set_config(stm32f4_udc.udc.composite, config);
 
 	HAL_PCD_EP_Transmit(&hpcd, 0x00U, NULL, 0U);
+#endif
 }
 
 static void stm32f4_ll_get_status(struct usb_control_header *req) {
@@ -291,7 +298,10 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 			HAL_PCD_EP_Transmit(hpcd, 0U, hpcd->IN_ep[epnum].xfer_buff, pep->rem_length);
 			/* Prepare endpoint for premature end of transfer */
 		 //(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
-			HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+
+			/* Do not prepare to receive here. Current UDC assumption:
+			 * INs and OUTs have to non-intermixed. */
+			//HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
 		} else { //this will end in this pkt
 			/* last packet is MPS multiple, so send ZLP packet */
 			if ((pep->maxpacket == pep->rem_length) &&
@@ -302,7 +312,10 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 				stm32f4_udc.ep0_data_len = 0U;
 				/* Prepare endpoint for premature end of transfer */
 				//(void)USBD_LL_PrepareReceive(pdev, 0U, NULL, 0U);
-				HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
+
+				/* Do not prepar, req->lene to receive here. Current UDC assumption:
+				 * INs and OUTs have to non-intermixed. */
+				//HAL_PCD_EP_Receive(hpcd, 0U, NULL, 0U);
 			} else {
 				printk("usb: din:?\n");
 				//if ((pdev->pClass->EP0_TxSent != NULL) &&
@@ -345,7 +358,7 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 	//USBD_LL_DataOutStage(hpcd->pData, epnum, hpcd->OUT_ep[epnum].xfer_buff);
 	printk("usb: dataOUTstage of 0x%x\n", epnum);
-
+#if 0
   struct USBD_EndpointTypeDef *pep;
 
 	if (epnum == 0U) {
@@ -374,6 +387,7 @@ void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
 	} else {
 		printk("usb: dout: EP%d\n", epnum);
 	}
+#endif
 }
 
 /**
@@ -382,6 +396,8 @@ void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
   * @retval None
   */
 void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
+	int i;
+
 	/* Reset Device */
 	printk("usb: reset\n");
 /*	printk("ep0[OUT]_info:\n"
@@ -440,4 +456,8 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
   //stm32f4_udc.ep_info[0x04U | 0x00U].is_used = 1U;
 
   stm32f4_udc.ep_info[0x04U | 0x00U].maxpacket = USB_MAX_EP0_SIZE;
+
+	for (i = 0; i < ARRAY_SIZE(stm32f4_udc.ep_info); i++) {
+		stm32f4_udc.ep_info[i].is_used = 0;
+	}
 }
