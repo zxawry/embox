@@ -3,44 +3,28 @@ name: CI
 on: [push]
 
 jobs:
-  ci:
-    runs-on: ubuntu-16.04 # Embox NFS write test fails with ubuntu 18.04: "RPC: Can't decode result"
-    strategy:
-      fail-fast: false
-      matrix:
-        template:
-          - aarch64/qemu
-          - arm/qemu
-          - platform/stm32/f4/stm32f4-discovery
-          - x86/qemu
-          - x86/smp
-          - x86/user_apps
-          - project/qt4/x86_qemu_emboxvc
-          - x86/test/lang
-          - x86/test/net
-          - x86/test/fs
-          - x86/test/units
-          - x86/test/packetdrill
-          - x86/test/qt-vnc
-          - sparc/qemu
-          - mips/qemu
-          - ppc/qemu
-          - microblaze/qemu
-          - usermode86/debug
-    container:
-      image: embox/emdocker-test
-      options: --privileged -v /:/host
+  pjlib-test:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/cache@v2
-        with:
-          path: |
-            mk/.cache
-          key: mybuild-${{ hashFiles('**/Mybuild') }}-${{ hashFiles('**/*.my') }}
-      - run: scripts/continuous/touch-mk-cache.sh
-      - run: chroot /host modprobe nfsd
-        if: matrix.template == 'x86/test/fs'
-      - run: ./scripts/continuous/prepare.sh ${{matrix.template}}
-      - run: make confload-${{matrix.template}}
-      - run: make -j $(nproc)
-      - run: ./scripts/continuous/run.sh ${{matrix.template}}
+      - uses: actions/checkout@v2
+      - name: install dependencies
+        run: sudo apt-get install -y build-essential gcc-multilib curl qemu-system-x86 expect
+      - name: confload
+        run: make confload-project/pjsip/x86-qemu-pjsip-tests && ./conf/conf_prepare.sh pjlib-test
+      - name: build
+        run: make -j $(nproc)
+      - name: pjlib-test
+        run: timeout 10m ./scripts/qemu/auto_qemu | tee log.txt && grep "Looks like everything is okay" log.txt
+
+  pjsip-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install dependencies
+        run: sudo apt-get install -y build-essential gcc-multilib curl qemu-system-x86 expect
+      - name: confload
+        run: make confload-project/pjsip/x86-qemu-pjsip-tests && ./conf/conf_prepare.sh pjsip-test
+      - name: build
+        run: make -j $(nproc)
+      - name: pjsip-test
+        run: timeout 40m ./scripts/qemu/auto_qemu | tee log.txt && grep "Looks like everything is okay" log.txt
