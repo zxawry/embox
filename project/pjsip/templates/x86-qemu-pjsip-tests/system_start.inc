@@ -13,4 +13,5 @@
 //"pjmedia_test",
 //"pjnath_test",
 //"pjsip_test",
+"shutdown -p",
 "tish",
