@@ -63,6 +63,7 @@ void _NORETURN arch_shutdown(arch_shutdown_mode_t mode) {
 		break;
 
 	case ARCH_SHUTDOWN_MODE_ABORT:
+		acpi_shutdown();
 		break;
 	}
 
