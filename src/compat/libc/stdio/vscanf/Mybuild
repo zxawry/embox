@@ -1,5 +1,5 @@
 package embox.compat.libc.stdio
 
-static module vscanf {
+static module vscanf_stub {
 	source "vscanf_stub.c"
 }
