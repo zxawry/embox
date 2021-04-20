@@ -1,0 +1,25 @@
+package project.website_sensors.cgi_bin.stubs
+
+@AutoCmd
+@Cmd(name="led_driver", help="Simulate LEDs control")
+module led_driver {
+	source "led_driver_stub.c"
+}
+
+@AutoCmd
+@Cmd(name="getlight", help="Simulate light sensors")
+module getlight {
+	source "getlight_stub.c"
+}
+
+@AutoCmd
+@Cmd(name="get_angular_rate", help="Simulate gyroscope angular rate sensor")
+module get_angular_rate {
+	source "get_angular_rate_stub.c"
+}
+
+@AutoCmd
+@Cmd(name="get_sensors_data", help="")
+module get_sensors_data {
+	source "get_sensors_data_stub.c"
+}
