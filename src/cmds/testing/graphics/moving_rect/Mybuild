@@ -1,0 +1,20 @@
+package embox.cmd.testing.graphics
+
+@AutoCmd
+@Cmd(name = "moving_rect",
+	help = "Draws moving rectangle into framebuffer",
+	man = '''
+		NAME
+			moving_rect - Draws moving rectangle into framebuffer
+		SYNOPSIS
+			moving_rect
+		DESCRIPTION
+			moving_rect - Draws moving rectangle into framebuffer
+		AUTHORS
+			Alexander Kalmuk
+	''')
+module moving_rect {
+	source "moving_rect.c"
+
+	depends embox.driver.video.fb
+}
